@@ -152,7 +152,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Rotas do Aluno
+    // Rotas do Aluno --
     Route::prefix('aluno')->name('aluno.')->group(function () {
         Route::get('/avaliacoes', [AlunoController::class, 'listarAvaliacoes'])->name('avaliacoes.index');
         Route::get('/avaliacoes/iniciar/{modeloAvaliacao}', [AlunoController::class, 'iniciarAvaliacaoDinamica'])->name('avaliacoes.iniciar');
