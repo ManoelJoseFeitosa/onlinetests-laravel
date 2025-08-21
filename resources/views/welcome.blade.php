@@ -1,0 +1,95 @@
+@section('title', 'Plataforma de Avaliação Online')
+<x-guest-layout>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="display-4 fw-bold">Plataforma de Avaliação Online para sua Escola</h1>
+                        <p class="lead text-muted mb-0">A solução completa para avaliações na sua instituição, agora com App para Android.</p>
+                    </div>
+                    <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo Online Tests" style="width: 180px; height: auto;" class="d-none d-md-block rounded">
+                </div>
+
+                <hr>
+
+                <div class="text-center my-5">
+                    <img src="{{ asset('images/provaonline.jpg') }}" class="img-fluid rounded shadow-lg" alt="Alunos realizando prova online">
+                </div>
+
+                <p class="mt-5" style="text-align: justify; font-size: 1.15rem; line-height: 1.7;">
+                    O OnlineTests é uma solução moderna e robusta, desenvolvida para as necessidades das escolas. Composta por uma plataforma web e um <strong>aplicativo para dispositivos móveis Android</strong>, ela foi projetada para transformar a maneira como sua instituição de ensino cria, gerencia e aplica avaliações. Com uma interface intuitiva, a plataforma centraliza todo o ciclo avaliativo, oferecendo ferramentas poderosas para cada perfil: Coordenadores, Professores e Alunos.
+                </p>
+                <p class="mt-4" style="text-align: justify; font-size: 1.15rem; line-height: 1.7;">
+                    Para o corpo docente, a plataforma representa uma revolução na rotina diária. Ao automatizar a correção de provas e simulados, ela <strong>agiliza drasticamente o tempo do professor</strong>, permitindo que ele se dedique mais ao planejamento pedagógico e menos às tarefas repetitivas. Além disso, a digitalização <strong>evita que o professor precise carregar grandes volumes de papel</strong>, mantendo todas as avaliações organizadas e acessíveis em um único lugar.
+                </p>
+                <p class="mt-4" style="text-align: justify; font-size: 1.15rem; line-height: 1.7;">
+                    O sistema foi construído sobre três pilares fundamentais: eficiência administrativa, autonomia pedagógica e desempenho do aluno. Como um benefício adicional, a plataforma é uma grande aliada do <strong>meio ambiente, pois por não necessitar de impressão, reduz significativamente o uso de papel</strong>, garantindo uma experiência integrada, otimizada e sustentável para todos.
+                </p>
+
+                <div class="text-center app-highlight p-5 rounded-3 shadow-sm my-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-4 mb-md-0">
+                            <img src="{{ asset('images/telacoordenadortablete10.png') }}" alt="Demonstração do aplicativo OnlineTests" style="width: 120px; height: auto;">
+                        </div>
+                        <div class="col-md-9 text-md-start">
+                            <h2 class="fw-bold">Conheça nosso App para Aplicação de Provas e Acesso a Plataforma</h2>
+                            <p class="lead my-3">
+                                Leve a segurança e o controle do OnlineTests para dentro da sala de aula com nosso <strong>aplicativo exclusivo para tablets e celulares Android</strong>. Crie um ambiente de provas controlado, seguro e livre de distrações, garantindo a integridade do processo avaliativo diretamente nos dispositivos da escola.
+                            </p>
+                            <a href="#" class="btn btn-light btn-lg">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Saiba Mais
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-5">
+
+                <div class="text-center">
+                    <h2 class="fw-bold">Funcionalidades por Perfil de Usuário</h2>
+                    <p class="mt-3 text-muted" style="font-size: 1.1rem;">
+                        O acesso à plataforma é segmentado por perfis, garantindo que cada usuário tenha um painel de controle (dashboard) personalizado com as ferramentas essenciais para suas tarefas diárias.
+                    </p>
+                </div>
+
+                <div class="row mt-5 g-4">
+                    <div class="col-lg-4 d-flex align-items-stretch">
+                        <div class="card shadow-sm text-center w-100">
+                            <div class="profile-card-image-container">
+                                 <img src="{{ asset('images/perfilcoordenador.jpg') }}" alt="Painel do coordenador">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Painel do Coordenador</h5>
+                                <p class="card-text">Gestão total do sistema, usuários e relatórios estratégicos.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-flex align-items-stretch">
+                        <div class="card shadow-sm text-center w-100">
+                            <div class="profile-card-image-container">
+                                <img src="{{ asset('images/perfildoprofessor.jpg') }}" alt="Painel do professor">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Painel do Professor</h5>
+                                <p class="card-text">Criação de questões, provas, simulados e acompanhamento de turmas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-flex align-items-stretch">
+                         <div class="card shadow-sm text-center w-100">
+                             <div class="profile-card-image-container">
+                                 <img src="{{ asset('images/perfildoaluno.jpg') }}" alt="Painel do aluno">
+                             </div>
+                             <div class="card-body">
+                                 <h5 class="card-title">Painel do Aluno</h5>
+                                 <p class="card-text">Foco em responder avaliações e acompanhar o próprio desempenho.</p>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-guest-layout>

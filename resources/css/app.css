@@ -1,0 +1,19 @@
+.profile-card-image-container {
+    height: 250px; /* Altura fixa para todos os 'moldes' */
+    padding: 1rem; /* Um preenchimento interno para a imagem respirar */
+    background-color: #f8f9fa; /* Um fundo cinza claro */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-card-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Garante que a imagem inteira caiba no espaço, sem cortes */
+}
+
+.app-highlight {
+    background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+    color: white;
+}

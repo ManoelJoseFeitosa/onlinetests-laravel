@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Alunos - {{ $serie->nome }}</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10pt; color: #333; }
+        h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 5px; }
+        h2 { text-align: center; color: #7f8c8d; font-size: 12pt; margin-top: 0; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Lista de Alunos</h1>
+        <h2>{{ $serie->nome }} - Ano Letivo de {{ $ano_letivo->ano }}</h2>
+    </header>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 65%;">Nome Completo do Aluno</th>
+                    <th>E-mail</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($matriculas as $matricula)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $matricula->aluno->nome }}</td>
+                    <td>{{ $matricula->aluno->email }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="3" style="text-align: center;">Nenhum aluno encontrado para estes filtros.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        <p style="margin-top: 15px;"><strong>Total de alunos na turma:</strong> {{ count($matriculas) }}</p>
+    </main>
+</body>
+</html>
