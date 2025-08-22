@@ -18,6 +18,6 @@ class DocumentoController extends Controller
         // Supondo que você tenha um arquivo de view em:
         // resources/views/documentos_publicos.blade.php
         // Se o nome for diferente, ajuste aqui.
-        return view('publico', compact('documentos'));
+        return view('documentos', compact('documentos'));
     }
 }
