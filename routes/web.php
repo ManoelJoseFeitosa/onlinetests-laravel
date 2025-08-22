@@ -15,6 +15,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ContatoController;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DocumentoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,7 @@ Route::get('/documentos', function () {
 Route::get('/contato', [ContatoController::class, 'create'])->name('contato');
 Route::post('/contato', [ContatoController::class, 'store'])->name('contato.store');
 Route::get('/politica-de-privacidade', function () { return view('politica-de-privacidade'); })->name('politica.privacidade');
+Route::get('/documentos', [DocumentoController::class, 'indexPublico'])->name('documentos.publico');
 
 require __DIR__.'/auth.php';
 
