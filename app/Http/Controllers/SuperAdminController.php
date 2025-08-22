@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Escola;
 use App\Models\User;
+use App\Models\Documento;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -151,4 +153,41 @@ class SuperAdminController extends Controller
 
         return back()->with('success', "Status da escola '{$escola->nome}' alterado com sucesso!");
     }
+
+    public function gerenciarDocumentos()
+{
+    $documentos = Documento::latest()->get();
+    return view('superadmin.gerenciar-documentos', compact('documentos'));
+}
+
+public function uploadDocumento(Request $request)
+{
+    $request->validate([
+        'titulo' => 'required|string|max:200',
+        'descricao' => 'nullable|string',
+        'arquivo' => 'required|file|mimes:pdf,doc,docx|max:10240', // 10MB
+    ]);
+
+    $caminhoArquivo = $request->file('arquivo')->store('docs', 'public');
+
+    Documento::create([
+        'titulo' => $request->titulo,
+        'descricao' => $request->descricao,
+        'caminho_arquivo' => $caminhoArquivo,
+        'ativo' => true,
+    ]);
+
+    return back()->with('success', 'Documento enviado com sucesso!');
+}
+
+public function excluirDocumento(Documento $documento)
+{
+    // Apaga o arquivo físico do storage
+    Storage::disk('public')->delete($documento->caminho_arquivo);
+
+    // Apaga o registro do banco de dados
+    $documento->delete();
+
+    return back()->with('success', 'Documento excluído com sucesso!');
+}
 }

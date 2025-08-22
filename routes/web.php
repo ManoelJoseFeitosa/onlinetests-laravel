@@ -69,6 +69,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/escolas/{escola}/editar', [SuperAdminController::class, 'edit'])->name('escolas.edit');
         Route::put('/escolas/{escola}', [SuperAdminController::class, 'update'])->name('escolas.update');
         Route::patch('/escolas/{escola}/toggle-status', [SuperAdminController::class, 'toggleStatus'])->name('escolas.toggleStatus');
+        Route::get('/gerenciar-documentos', [SuperAdminController::class, 'gerenciarDocumentos'])->name('documentos.index');
+        Route::post('/gerenciar-documentos', [SuperAdminController::class, 'uploadDocumento'])->name('documentos.store');
+        Route::delete('/documentos/{documento}', [SuperAdminController::class, 'excluirDocumento'])->name('documentos.destroy');
     });
 
     // Rotas do Coordenador

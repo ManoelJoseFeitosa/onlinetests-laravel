@@ -12,7 +12,7 @@
                         <div class="list-group shadow-sm">
                             @foreach ($documentos as $doc)
                                 {{-- ## CORREÇÃO APLICADA AQUI ## --}}
-                                <a href="{{ asset('docs/' . $doc->caminho_arquivo) }}" class="list-group-item list-group-item-action flex-column align-items-start p-3" download>
+                                <a href="{{ Storage::url($doc->caminho_arquivo) }}" ... download>
                                     <div class="d-flex w-100 justify-content-between">
                                         <h5 class="mb-1 text-primary"><i class="bi bi-file-earmark-arrow-down-fill me-2"></i>{{ $doc->titulo }}</h5>
                                         <small class="text-muted">{{ $doc->created_at->format('d/m/Y') }}</small>

@@ -44,7 +44,7 @@
 
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="{{ route('dashboard') }}">Painel</a>
-                                <a class="dropdown-item" href="#">Documentos</a>
+                                <a class="dropdown-item" href="{{ route('superadmin.documentos.index') }}">Documentos</a>
                                 <hr class="dropdown-divider">
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
