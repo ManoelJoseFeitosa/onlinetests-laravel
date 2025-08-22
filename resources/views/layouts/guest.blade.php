@@ -29,7 +29,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Início</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('funcionalidades') }}">Funcionalidades</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('planos') }}">Planos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('documentos') }}">Documentos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('documentos.publico') }}">Documentos</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('contato') }}">Contato</a></li>
                 </ul>
                 
