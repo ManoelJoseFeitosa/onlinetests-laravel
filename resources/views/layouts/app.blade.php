@@ -12,7 +12,7 @@
 
     @vite(['resources/css/app.css'])
 
-    @stack('styles') {{-- <-- ADICIONE ESTA LINHA PARA ESTILOS ESPECÍFICOS DA PÁGINA --}}
+    @stack('styles')
 </head>
 <body class="bg-light">
     <div id="app">
@@ -44,7 +44,17 @@
 
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="{{ route('dashboard') }}">Painel</a>
-                                <a class="dropdown-item" href="{{ route('superadmin.documentos.index') }}">Documentos</a>
+
+                                {{-- ## INÍCIO DA CORREÇÃO ## --}}
+                                @if (Auth::user()->is_superadmin)
+                                    {{-- Link para a página de gerenciamento (SuperAdmin) --}}
+                                    <a class="dropdown-item" href="{{ route('superadmin.documentos.index') }}">Documentos</a>
+                                @else
+                                    {{-- Link para a página pública (Outros perfis) --}}
+                                    <a class="dropdown-item" href="{{ route('documentos.publico') }}">Documentos</a>
+                                @endif
+                                {{-- ## FIM DA CORREÇÃO ## --}}
+
                                 <hr class="dropdown-divider">
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
