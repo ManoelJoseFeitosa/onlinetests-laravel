@@ -57,7 +57,7 @@
                     <p><a href="{{ route('funcionalidades') }}" class="text-white" style="text-decoration: none;">Funcionalidades</a></p>
                     <p><a href="{{ route('planos') }}" class="text-white" style="text-decoration: none;">Planos</a></p>
                     <p><a href="{{ route('contato') }}" class="text-white" style="text-decoration: none;">Contato</a></p>
-                    <p><a href="{{ route('documentos') }}" class="text-white" style="text-decoration: none;">Documentos</a></p>
+                    <p><a href="{{ route('documentos.publico') }}" class="text-white" style="text-decoration: none;">Documentos</a></p>
                     <p><a href="{{ route('politica.privacidade') }}" class="text-white" style="text-decoration: none;">Termos e Privacidade</a></p>
                 </div>
                 <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
