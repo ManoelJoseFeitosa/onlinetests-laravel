@@ -28,7 +28,7 @@
                                 <strong>Série:</strong> {{ $item['objeto']->serie->nome ?? 'N/A' }} <br>
                                 <strong>Tempo:</strong> {{ $item['objeto']->tempo_limite ? $item['objeto']->tempo_limite . ' minutos' : 'Livre' }}
                             </p>
-                            <div class="mt-auto text-center">
+<div class="mt-auto text-center">
     @if ($item['status'] == 'Finalizado')
         <a href="{{ route('aluno.resultados.show', $item['resultado']) }}" class="btn btn-success w-100">
             <i class="bi bi-check-circle-fill"></i> Ver Resultado
