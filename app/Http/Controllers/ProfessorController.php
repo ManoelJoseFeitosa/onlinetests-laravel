@@ -20,8 +20,8 @@ class ProfessorController extends Controller
     {
         $questoes = Questao::where('criador_id', Auth::id())
             ->with('disciplina', 'serie')
-            ->latest() // Ordena pelas mais recentes primeiro
-            ->paginate(15); // Adiciona paginação
+            ->latest()
+            ->paginate(15);
 
         return view('professor.banco-questoes', ['questoes' => $questoes]);
     }
@@ -32,8 +32,6 @@ class ProfessorController extends Controller
     public function criarQuestao(): View
     {
         $user = Auth::user();
-
-        // O professor só pode criar questões para as séries e disciplinas que leciona
         $disciplinas = $user->disciplinasLecionadas()->orderBy('nome')->get();
         $series = $user->seriesLecionadas()->orderBy('nome')->get();
 
@@ -42,40 +40,40 @@ class ProfessorController extends Controller
 
     /**
      * Salva a nova questão no banco de dados.
-     * * CORREÇÃO: Adicionadas as regras de validação para todos os campos
-     * que serão usados para criar a questão, incluindo 'serie_id'.
      */
     public function salvarQuestao(Request $request)
     {
+        // CORREÇÃO: Adicionamos a validação para todos os campos do formulário,
+        // incluindo as opções de resposta, gabarito e justificativa.
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
             'serie_id' => 'required|exists:series,id',
             'assunto' => 'required|string|max:255',
-            'tipo' => 'required|string|in:alternativa,dissertativa', // Exemplo de tipos de questão
-            'nivel' => 'required|string|in:facil,medio,dificil', // Exemplo de níveis
-            'texto_questao' => 'required|string',
-            'imagem_alt' => 'nullable|string|max:255',
+            'tipo' => 'required|string',
+            'nivel' => 'required|string',
+            'texto' => 'required|string', // O nome do campo no formulário deve ser 'texto'
             'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'imagem_alt' => 'nullable|string|max:255',
+            'opcao_a' => 'nullable|string',
+            'opcao_b' => 'nullable|string',
+            'opcao_c' => 'nullable|string',
+            'opcao_d' => 'nullable|string',
+            'gabarito' => 'required|string|max:255',
+            'justificativa_gabarito' => 'nullable|string',
         ]);
 
         $caminhoImagem = null;
         if ($request->hasFile('imagem_questao')) {
-            // Salva o arquivo em 'storage/app/public/uploads/questoes' e retorna o caminho
             $caminhoImagem = $request->file('imagem_questao')->store('uploads/questoes', 'public');
         }
 
-        Questao::create([
-            'disciplina_id' => $validatedData['disciplina_id'],
-            'serie_id' => $validatedData['serie_id'],
-            'assunto' => $validatedData['assunto'],
-            'tipo' => $validatedData['tipo'],
-            'nivel' => $validatedData['nivel'],
-            'texto' => $validatedData['texto_questao'],
-            'imagem_nome' => $caminhoImagem, // Salva o caminho completo retornado pelo store
-            'imagem_alt' => $validatedData['imagem_alt'],
-            // ... (resto dos campos)
-            'criador_id' => Auth::id(),
-        ]);
+        // Adicionamos o caminho da imagem e o ID do criador aos dados validados
+        $dadosParaSalvar = $validatedData;
+        $dadosParaSalvar['imagem_nome'] = $caminhoImagem;
+        $dadosParaSalvar['criador_id'] = Auth::id();
+
+        // O método create agora receberá todos os dados validados do formulário
+        Questao::create($dadosParaSalvar);
 
         return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão criada com sucesso!');
     }
@@ -85,7 +83,6 @@ class ProfessorController extends Controller
      */
     public function editarQuestao(Questao $questao): View
     {
-        // Garante que o professor só possa editar suas próprias questões
         if ($questao->criador_id !== Auth::id()) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -99,7 +96,6 @@ class ProfessorController extends Controller
 
     /**
      * Atualiza a questão no banco de dados.
-     * * CORREÇÃO: Adicionadas as regras de validação para a atualização.
      */
     public function atualizarQuestao(Request $request, Questao $questao)
     {
@@ -107,23 +103,31 @@ class ProfessorController extends Controller
             abort(403);
         }
 
+        // CORREÇÃO: Adicionamos também a validação completa para a atualização.
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
             'serie_id' => 'required|exists:series,id',
             'assunto' => 'required|string|max:255',
-            'tipo' => 'required|string|in:alternativa,dissertativa',
-            'nivel' => 'required|string|in:facil,medio,dificil',
-            'texto_questao' => 'required|string',
-            'imagem_alt' => 'nullable|string|max:255',
+            'tipo' => 'required|string',
+            'nivel' => 'required|string',
+            'texto' => 'required|string',
             'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'imagem_alt' => 'nullable|string|max:255',
+            'opcao_a' => 'nullable|string',
+            'opcao_b' => 'nullable|string',
+            'opcao_c' => 'nullable|string',
+            'opcao_d' => 'nullable|string',
+            'gabarito' => 'required|string|max:255',
+            'justificativa_gabarito' => 'nullable|string',
         ]);
 
         $dadosParaAtualizar = $validatedData;
 
         if ($request->hasFile('imagem_questao')) {
-            // Se quiser apagar a imagem antiga, adicione a lógica aqui:
-            // if ($questao->imagem_nome) { Storage::disk('public')->delete($questao->imagem_nome); }
-
+            // Apaga a imagem antiga se ela existir
+            if ($questao->imagem_nome) {
+                Storage::disk('public')->delete($questao->imagem_nome);
+            }
             $caminhoImagem = $request->file('imagem_questao')->store('uploads/questoes', 'public');
             $dadosParaAtualizar['imagem_nome'] = $caminhoImagem;
         }
@@ -135,7 +139,6 @@ class ProfessorController extends Controller
 
     public function listarBloqueios()
     {
-        // Busca todos os resultados que estão com 'is_blocked' = true
         $resultadosBloqueados = Resultado::with(['avaliacao', 'aluno'])
             ->where('is_blocked', true)
             ->get();
