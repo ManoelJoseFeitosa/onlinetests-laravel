@@ -42,7 +42,7 @@ class ContatoController extends Controller
                 'from' => config('mail.from.name') . ' <' . config('mail.from.address') . '>',
 
                 // Alterado o destinatário para um email fora da Locaweb (ex: Gmail)
-                'to' => ['seu-email-pessoal@gmail.com'], 
+                'to' => ['manoelbd2012@gmail.com'], 
                 'subject' => 'Nova Mensagem de Contato - ' . $validated['nome'],
                 'html' => view('emails.contato', $validated)->render(), // Usaremos uma view para o corpo do email
                 'reply_to' => $validated['email'],
