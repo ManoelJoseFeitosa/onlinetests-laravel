@@ -12,7 +12,6 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-{{-- ## CORREÇÃO 1: Classes adicionadas ao body ## --}}
 <body class="bg-light d-flex flex-column min-vh-100">
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
@@ -34,17 +33,18 @@
                 </ul>
                 
                 <div class="ms-lg-3">
-                     <a href="{{ route('login') }}" class="btn btn-primary">Acessar Sistema</a>
+                       <a href="{{ route('login') }}" class="btn btn-primary">Acessar Sistema</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    {{-- ## CORREÇÃO 2: Classe adicionada ao main ## --}}
     <main class="flex-grow-1">
         {{ $slot }}
     </main>
 
+    {{-- ## INÍCIO DA CORREÇÃO ## --}}
+    @if(!Request::routeIs('login'))
     <footer class="bg-dark text-white pt-5 pb-4">
         <div class="container text-center text-md-start">
             <div class="row text-center text-md-start">
@@ -87,6 +87,8 @@
             </div>
         </div>
     </footer>
+    @endif
+    {{-- ## FIM DA CORREÇÃO ## --}}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
