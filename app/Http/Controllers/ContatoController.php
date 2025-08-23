@@ -48,8 +48,8 @@ class ContatoController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Se der erro no envio, retorna com uma mensagem de falha
-            return back()->with('error', 'Ocorreu um erro ao enviar sua mensagem. Tente novamente.');
+            // Altere temporariamente para mostrar o erro completo para debug
+            return back()->with('error', 'Ocorreu um erro: ' . $e->getMessage());
         }
 
         // 3. Se tudo deu certo, redireciona de volta com sucesso
