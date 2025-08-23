@@ -96,6 +96,7 @@
 
     @push('scripts')
     <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     document.addEventListener('DOMContentLoaded', function() {
         const inicioContainer = document.getElementById('inicio-container');
         const conteudoProva = document.getElementById('conteudo-prova');
@@ -119,14 +120,34 @@
         }
 
         function bloquearProva(motivo) {
-            if (isBlocked) return;
-            isBlocked = true;
-            showFlashMessage(`PROVA BLOQUEADA: ${motivo}. Envie suas respostas agora.`, 'error', 0);
-            if (questoesFieldset) questoesFieldset.disabled = true;
-            document.removeEventListener('fullscreenchange', onFullscreenChange);
-            document.removeEventListener('visibilitychange', onVisibilityChange);
-            document.removeEventListener('keydown', onKeyDown);
+    // Impede que a função seja chamada várias vezes
+    if (isBlocked) return;
+    isBlocked = true;
+
+    showFlashMessage(`PROVA BLOQUEADA: ${motivo}. Envie suas respostas agora.`, 'error', 0);
+    if (questoesFieldset) questoesFieldset.disabled = true;
+    document.removeEventListener('fullscreenchange', onFullscreenChange);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.removeEventListener('keydown', onKeyDown);
+
+    // Envia uma requisição para o servidor para marcar a prova como bloqueada
+    fetch(`{{ route('aluno.avaliacoes.bloquear', $avaliacao) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken // Token de segurança do Laravel
+        },
+        body: JSON.stringify({ motivo: motivo }) // Envia o motivo do bloqueio
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error('Falha ao notificar o servidor sobre o bloqueio da prova.');
         }
+    })
+    .catch(error => {
+        console.error('Erro de rede ao tentar bloquear a prova no servidor.', error);
+    });
+}
 
         function iniciarCronometro(minutos) {
             if (!minutos || minutos <= 0 || !timerDisplay) return;

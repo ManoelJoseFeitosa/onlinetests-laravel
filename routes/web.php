@@ -134,28 +134,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Rotas do Professor
-    Route::prefix('professor')->name('professor.')->group(function () {
-        Route::get('/banco-questoes', [ProfessorController::class, 'bancoQuestoes'])->name('banco-questoes.index');
-        Route::get('/banco-questoes/criar', [ProfessorController::class, 'criarQuestao'])->name('banco-questoes.create');
-        Route::post('/banco-questoes', [ProfessorController::class, 'salvarQuestao'])->name('banco-questoes.store')->middleware('check.plan:questoes');
-        Route::get('/banco-questoes/{questao}/editar', [ProfessorController::class, 'editarQuestao'])->name('banco-questoes.edit');
-        Route::put('/banco-questoes/{questao}', [ProfessorController::class, 'atualizarQuestao'])->name('banco-questoes.update');
-        Route::prefix('modelos-avaliacao')->name('modelos.')->group(function () {
-            Route::get('/criar', [ModeloAvaliacaoController::class, 'create'])->name('create');
-        });
-        Route::prefix('recuperacoes')->name('recuperacoes.')->group(function () {
-            Route::get('/criar', [RecuperacaoController::class, 'create'])->name('create');
-        });
-        Route::prefix('minhas-avaliacoes')->name('avaliacoes.')->group(function () {
-            Route::get('/', [ModeloAvaliacaoController::class, 'index'])->name('index');
-            Route::get('/{modelo}', [ModeloAvaliacaoController::class, 'show'])->name('show');
-            Route::delete('/{modelo}', [ModeloAvaliacaoController::class, 'destroy'])->name('destroy');
-        });
-        Route::prefix('desempenho')->name('desempenho.')->group(function () {
-            Route::get('/', [DesempenhoController::class, 'index'])->name('index');
-        });
+    // Rotas do Professor --
+Route::prefix('professor')->name('professor.')->group(function () {
+    // ... rotas de banco de questoes, modelos, etc.
+    Route::get('/banco-questoes', [ProfessorController::class, 'bancoQuestoes'])->name('banco-questoes.index');
+    Route::get('/banco-questoes/criar', [ProfessorController::class, 'criarQuestao'])->name('banco-questoes.create');
+    Route::post('/banco-questoes', [ProfessorController::class, 'salvarQuestao'])->name('banco-questoes.store')->middleware('check.plan:1');
+    Route::get('/banco-questoes/{questao}/editar', [ProfessorController::class, 'editarQuestao'])->name('banco-questoes.edit');
+    Route::put('/banco-questoes/{questao}', [ProfessorController::class, 'atualizarQuestao'])->name('banco-questoes.update');
+    Route::prefix('modelos-avaliacao')->name('modelos.')->group(function () {
+        Route::get('/criar', [ModeloAvaliacaoController::class, 'create'])->name('create');
     });
+    Route::prefix('recuperacoes')->name('recuperacoes.')->group(function () {
+        Route::get('/criar', [RecuperacaoController::class, 'create'])->name('create');
+    });
+    Route::prefix('minhas-avaliacoes')->name('avaliacoes.')->group(function () {
+        Route::get('/', [ModeloAvaliacaoController::class, 'index'])->name('index');
+        Route::get('/{modelo}', [ModeloAvaliacaoController::class, 'show'])->name('show');
+        Route::delete('/{modelo}', [ModeloAvaliacaoController::class, 'destroy'])->name('destroy');
+    });
+    Route::prefix('desempenho')->name('desempenho.')->group(function () {
+        Route::get('/', [DesempenhoController::class, 'index'])->name('index');
+    });
+
+    Route::get('/bloqueios', [ProfessorController::class, 'listarBloqueios'])->name('bloqueios.index');
+    Route::post('/bloqueios/{resultado}/desbloquear', [ProfessorController::class, 'desbloquearProva'])->name('bloqueios.desbloquear');
+});
 
     // Rotas do Aluno --
     Route::prefix('aluno')->name('aluno.')->group(function () {
@@ -165,5 +169,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/avaliacoes/responder/{avaliacao}', [AlunoController::class, 'salvarRespostas'])->name('avaliacoes.salvar');
         Route::get('/meus-resultados', [AlunoController::class, 'meusResultados'])->name('resultados.index');
         Route::get('/resultados/{resultado}', [AlunoController::class, 'verResultado'])->name('resultados.show');
+        Route::post('/avaliacoes/{avaliacao}/bloquear', [AlunoController::class, 'bloquearProva'])->name('avaliacoes.bloquear');
     });
+    
 });

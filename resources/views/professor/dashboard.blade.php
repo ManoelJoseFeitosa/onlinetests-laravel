@@ -63,7 +63,19 @@
                     </div>
                 </div>
             </div>
-
+            
+            {{-- ## CARD ADICIONADO ## --}}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center d-flex flex-column">
+                        <div class="display-4 text-warning mb-2"><i class="bi bi-unlock-fill"></i></div>
+                        <h5 class="card-title">Desbloquear Prova</h5>
+                        <p class="card-text text-muted small flex-grow-1">Veja a lista de alunos que tiveram a prova bloqueada e libere o acesso.</p>
+                        <a href="{{ route('professor.bloqueios.index') }}" class="btn btn-warning mt-auto">Gerenciar Bloqueios</a>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 </x-app-layout>

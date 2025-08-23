@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use App\Models\Serie;
 use App\Models\Disciplina;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Resultado;
 
 class ProfessorController extends Controller
 {
@@ -108,5 +109,23 @@ class ProfessorController extends Controller
     $questao->update($dadosParaAtualizar);
 
     return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão atualizada com sucesso!');
+    }
+
+    public function listarBloqueios()
+    {
+        // Busca todos os resultados que estão com 'is_blocked' = true
+        $resultadosBloqueados = Resultado::with(['avaliacao', 'aluno'])
+                                    ->where('is_blocked', true)
+                                    ->get();
+
+        return view('professor.bloqueios.index', compact('resultadosBloqueados'));
+    }
+
+    public function desbloquearProva(Resultado $resultado)
+    {
+        $resultado->is_blocked = false;
+        $resultado->save();
+
+        return back()->with('success', 'Prova do aluno ' . $resultado->aluno->nome . ' desbloqueada com sucesso!');
     }
 }

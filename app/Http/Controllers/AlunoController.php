@@ -304,4 +304,20 @@ public function meusResultados(): View
         $respostas_map = $resultado->respostas->keyBy('questao_id');
         return view('aluno.ver-resultado', ['resultado' => $resultado, 'respostas_map' => $respostas_map]);
     }
+
+    public function bloquearProva(Request $request, Avaliacao $avaliacao)
+    {
+        $aluno = Auth::user();
+        // Encontra o resultado para o aluno e a avaliação
+        $resultado = Resultado::where('aluno_id', $aluno->id)
+                            ->where('avaliacao_id', $avaliacao->id)
+                            ->first();
+
+        if ($resultado) {
+            $resultado->is_blocked = true;
+            $resultado->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
 }
