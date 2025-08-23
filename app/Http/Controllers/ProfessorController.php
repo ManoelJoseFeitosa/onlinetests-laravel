@@ -43,15 +43,14 @@ class ProfessorController extends Controller
      */
     public function salvarQuestao(Request $request)
     {
-        // CORREÇÃO: Adicionamos a validação para todos os campos do formulário,
-        // incluindo as opções de resposta, gabarito e justificativa.
+        // Validação usando os nomes dos campos que provavelmente estão no seu formulário
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
             'serie_id' => 'required|exists:series,id',
             'assunto' => 'required|string|max:255',
             'tipo' => 'required|string',
             'nivel' => 'required|string',
-            'texto' => 'required|string', // O nome do campo no formulário deve ser 'texto'
+            'texto_questao' => 'required|string', // Validando o campo do formulário
             'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'imagem_alt' => 'nullable|string|max:255',
             'opcao_a' => 'nullable|string',
@@ -67,13 +66,24 @@ class ProfessorController extends Controller
             $caminhoImagem = $request->file('imagem_questao')->store('uploads/questoes', 'public');
         }
 
-        // Adicionamos o caminho da imagem e o ID do criador aos dados validados
-        $dadosParaSalvar = $validatedData;
-        $dadosParaSalvar['imagem_nome'] = $caminhoImagem;
-        $dadosParaSalvar['criador_id'] = Auth::id();
-
-        // O método create agora receberá todos os dados validados do formulário
-        Questao::create($dadosParaSalvar);
+        // Mapeamento correto dos campos para o banco de dados
+        Questao::create([
+            'disciplina_id' => $validatedData['disciplina_id'],
+            'serie_id' => $validatedData['serie_id'],
+            'assunto' => $validatedData['assunto'],
+            'tipo' => $validatedData['tipo'],
+            'nivel' => $validatedData['nivel'],
+            'texto' => $validatedData['texto_questao'], // Mapeando 'texto_questao' do form para a coluna 'texto'
+            'imagem_nome' => $caminhoImagem,
+            'imagem_alt' => $validatedData['imagem_alt'],
+            'opcao_a' => $validatedData['opcao_a'] ?? null,
+            'opcao_b' => $validatedData['opcao_b'] ?? null,
+            'opcao_c' => $validatedData['opcao_c'] ?? null,
+            'opcao_d' => $validatedData['opcao_d'] ?? null,
+            'gabarito' => $validatedData['gabarito'],
+            'justificativa_gabarito' => $validatedData['justificativa_gabarito'] ?? null,
+            'criador_id' => Auth::id(),
+        ]);
 
         return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão criada com sucesso!');
     }
@@ -103,14 +113,13 @@ class ProfessorController extends Controller
             abort(403);
         }
 
-        // CORREÇÃO: Adicionamos também a validação completa para a atualização.
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
             'serie_id' => 'required|exists:series,id',
             'assunto' => 'required|string|max:255',
             'tipo' => 'required|string',
             'nivel' => 'required|string',
-            'texto' => 'required|string',
+            'texto_questao' => 'required|string', // Validando o campo do formulário
             'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'imagem_alt' => 'nullable|string|max:255',
             'opcao_a' => 'nullable|string',
@@ -121,10 +130,12 @@ class ProfessorController extends Controller
             'justificativa_gabarito' => 'nullable|string',
         ]);
 
+        // Mapeando 'texto_questao' para a coluna 'texto'
         $dadosParaAtualizar = $validatedData;
+        $dadosParaAtualizar['texto'] = $validatedData['texto_questao'];
+        unset($dadosParaAtualizar['texto_questao']); // Remove a chave original para evitar conflito
 
         if ($request->hasFile('imagem_questao')) {
-            // Apaga a imagem antiga se ela existir
             if ($questao->imagem_nome) {
                 Storage::disk('public')->delete($questao->imagem_nome);
             }
