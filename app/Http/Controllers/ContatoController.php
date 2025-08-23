@@ -38,10 +38,8 @@ class ContatoController extends Controller
 
             // 2. Monta e envia o email
             $resend->emails->send([
-                // ## INÍCIO DA CORREÇÃO ##
                 // Usa o endereço configurado no .env como remetente
-                'from' => config('mail.from.name') . ' <' . config('mail.from.address') . '>',
-                // ## FIM DA CORREÇÃO ##
+                'from' => $validated['nome'] . ' <' . $validated['email'] . '>',
                 
                 'to' => ['contato@onlinetests.com.br'],
                 'subject' => 'Nova Mensagem de Contato - ' . $validated['nome'],
