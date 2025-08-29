@@ -28,7 +28,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Disciplina</th>
-                                <th>Série</th>
+                                <th>Série(s)</th>  {{-- Título da coluna atualizado --}}
                                 <th>Assunto</th>
                                 <th>Enunciado</th>
                                 <th class="text-center">Nível</th>
@@ -40,7 +40,13 @@
                             <tr>
                                 <td>{{ $questao->id }}</td>
                                 <td>{{ $questao->disciplina->nome }}</td>
-                                <td>{{ $questao->serie->nome }}</td>
+                                <td>
+                                    {{-- CORREÇÃO APLICADA AQUI --}}
+                                    {{-- Loop para exibir todas as séries associadas --}}
+                                    @foreach($questao->series as $serie)
+                                        <span class="badge bg-secondary fw-normal">{{ $serie->nome }}</span>
+                                    @endforeach
+                                </td>
                                 <td>{{ $questao->assunto }}</td>
                                 <td>{{ Str::limit($questao->texto, 80) }}</td>
                                 <td class="text-center">
@@ -70,8 +76,7 @@
                 </div>
 
                 @if($questoes->hasPages())
-                <div class="mt-4">
-                    {{-- Usando o template de paginação do Bootstrap 5 --}}
+                <div class="mt-4 d-flex justify-content-center">
                     {{ $questoes->links('pagination::bootstrap-5') }}
                 </div>
                 @endif
