@@ -140,12 +140,13 @@
             }
         });
 
-        // ### JAVASCRIPT CORRIGIDO AQUI ###
         saveButton.addEventListener('click', function() {
             const resultadoId = modalResultadoId.value;
             const novaNota = modalNovaNota.value;
             const justificativa = modalJustificativa.value;
 
+            // ### CORREÇÃO APLICADA AQUI ###
+            // A URL para salvar a nota estava incorreta.
             fetch(`/professor/resultados/${resultadoId}/atualizar-nota`, {
                 method: 'POST',
                 headers: {
@@ -163,7 +164,7 @@
                     const cellToUpdate = document.querySelector(`td[data-resultado-id='${resultadoId}']`);
                     if(cellToUpdate) {
                         cellToUpdate.textContent = data.nova_nota_formatada;
-                        cellToUpdate.style.backgroundColor = '#d1e7dd'; // Verde para feedback visual
+                        cellToUpdate.style.backgroundColor = '#d1e7dd';
                         setTimeout(() => { cellToUpdate.style.backgroundColor = ''; }, 1500);
                     }
                     editModal.hide();
