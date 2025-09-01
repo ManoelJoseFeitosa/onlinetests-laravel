@@ -1,5 +1,9 @@
-@section('title', 'Painel do Professor')
 <x-app-layout>
+    {{-- Corrigindo a sintaxe do título para a de slot --}}
+    <x-slot name="title">
+        Painel do Professor
+    </x-slot>
+
     <div class="container">
         <h1 class="h3 mb-2 text-gray-800">Painel Principal</h1>
         
@@ -75,15 +79,17 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center d-flex flex-column">
+                        <div class="display-4 text-primary mb-2"><i class="bi bi-pencil-square"></i></div>
                         <h5 class="card-title">Gerenciar Notas</h5>
-                        <p class="card-text">Visualize e altere as notas finais dos alunos por turma.</p>
-                        <a href="{{ route('professor.notas.index') }}" class="btn btn-primary">Acessar</a>
+                        <p class="card-text text-muted small flex-grow-1">Visualize e altere as notas finais dos alunos por turma.</p>
+                        <a href="{{ route('professor.notas.index') }}" class="btn btn-primary mt-auto">Acessar</a>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>
