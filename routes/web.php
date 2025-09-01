@@ -159,6 +159,10 @@ Route::prefix('professor')->name('professor.')->group(function () {
 
     Route::get('/bloqueios', [ProfessorController::class, 'listarBloqueios'])->name('bloqueios.index');
     Route::post('/bloqueios/{resultado}/desbloquear', [ProfessorController::class, 'desbloquearProva'])->name('bloqueios.desbloquear');
+    
+    Route::get('/gerenciar-notas', [ProfessorController::class, 'gerenciarNotas'])->name('notas.index');
+    Route::get('/turmas/{serie}/dados-boletim', [ProfessorController::class, 'buscarDadosBoletim'])->name('notas.dadosBoletim');
+    Route::post('/resultados/{resultado}/atualizar-nota', [ProfessorController::class, 'atualizarNota'])->name('notas.update');
 });
 
     // Rotas do Aluno --

@@ -64,7 +64,6 @@
                 </div>
             </div>
             
-            {{-- ## CARD ADICIONADO ## --}}
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center d-flex flex-column">
@@ -76,6 +75,15 @@
                 </div>
             </div>
             
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Gerenciar Notas</h5>
+                        <p class="card-text">Visualize e altere as notas finais dos alunos por turma.</p>
+                        <a href="{{ route('professor.notas.index') }}" class="btn btn-primary">Acessar</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

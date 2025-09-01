@@ -18,6 +18,9 @@ class Resultado extends Model
         'aluno_id',
         'avaliacao_id',
         'ano_letivo_id',
+        'nota_original',
+        'nota_ajustada_por',
+        'justificativa_ajuste',
     ];
 
     protected $casts = [
