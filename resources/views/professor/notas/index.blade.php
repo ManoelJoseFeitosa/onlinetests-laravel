@@ -67,7 +67,7 @@
         const thead = document.getElementById('boletim-head');
         const tbody = document.getElementById('boletim-body');
         const loading = document.getElementById('loading');
-
+        
         const editModal = new bootstrap.Modal(document.getElementById('editNoteModal'));
         const modalAluno = document.getElementById('modal-aluno-nome');
         const modalAvaliacao = document.getElementById('modal-avaliacao-nome');
@@ -89,19 +89,21 @@
             fetch(`/professor/turmas/${serieId}/dados-boletim`)
                 .then(response => response.json())
                 .then(data => {
-                    // Limpa a tabela
                     thead.innerHTML = '';
                     tbody.innerHTML = '';
 
-                    // Cria o cabeçalho da tabela
+                    if (data.avaliacoes.length === 0) {
+                        loading.style.display = 'none';
+                        container.style.display = 'block';
+                        tbody.innerHTML = '<tr><td class="text-center text-muted py-4">Nenhuma avaliação foi respondida por esta turma ainda.</td></tr>';
+                        return;
+                    }
+
                     let headerRow = '<tr><th>Aluno</th>';
-                    data.avaliacoes.forEach(av => {
-                        headerRow += `<th>${av.nome}</th>`;
-                    });
+                    data.avaliacoes.forEach(av => headerRow += `<th>${av.nome}</th>`);
                     headerRow += '</tr>';
                     thead.innerHTML = headerRow;
 
-                    // Cria as linhas dos alunos
                     data.alunos.forEach(aluno => {
                         let bodyRow = `<tr><td>${aluno.nome}</td>`;
                         data.avaliacoes.forEach(av => {
@@ -109,7 +111,7 @@
                             const resultado = data.resultados[key];
                             if (resultado) {
                                 const notaFormatada = parseFloat(resultado.nota).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                                bodyRow += `<td class="text-center nota-editavel" 
+                                bodyRow += `<td class="text-center nota-editavel" style="cursor: pointer;"
                                                 data-resultado-id="${resultado.id}" 
                                                 data-aluno-nome="${aluno.nome}"
                                                 data-avaliacao-nome="${av.nome}">${notaFormatada}</td>`;
@@ -120,13 +122,12 @@
                         bodyRow += '</tr>';
                         tbody.innerHTML += bodyRow;
                     });
-
+                    
                     loading.style.display = 'none';
                     container.style.display = 'block';
                 });
         });
 
-        // Lógica para abrir o Modal
         tbody.addEventListener('click', function(e) {
             if (e.target && e.target.classList.contains('nota-editavel')) {
                 const cell = e.target;
@@ -134,12 +135,12 @@
                 modalAvaliacao.textContent = cell.dataset.avaliacaoNome;
                 modalResultadoId.value = cell.dataset.resultadoId;
                 modalNovaNota.value = parseFloat(cell.textContent.replace(',', '.')).toFixed(2);
-                modalJustificativa.value = ''; // Limpa a justificativa
+                modalJustificativa.value = '';
                 editModal.show();
             }
         });
 
-        // Lógica para salvar a nota
+        // ### JAVASCRIPT CORRIGIDO AQUI ###
         saveButton.addEventListener('click', function() {
             const resultadoId = modalResultadoId.value;
             const novaNota = modalNovaNota.value;
@@ -159,15 +160,20 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Atualiza a célula na tabela
                     const cellToUpdate = document.querySelector(`td[data-resultado-id='${resultadoId}']`);
                     if(cellToUpdate) {
                         cellToUpdate.textContent = data.nova_nota_formatada;
+                        cellToUpdate.style.backgroundColor = '#d1e7dd'; // Verde para feedback visual
+                        setTimeout(() => { cellToUpdate.style.backgroundColor = ''; }, 1500);
                     }
                     editModal.hide();
                 } else {
-                    alert('Erro ao atualizar a nota.');
+                    alert('Erro ao atualizar a nota. Verifique os valores e tente novamente.');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocorreu um erro de comunicação. Tente novamente.');
             });
         });
     });
