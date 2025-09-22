@@ -148,11 +148,22 @@ class ModeloAvaliacaoController extends Controller
 
     public function getAssuntos(Request $request)
     {
-        // ... (seu código getAssuntos está correto e permanece o mesmo)
-        $request->validate(['disciplina_id' => 'required|integer', 'serie_id' => 'required|integer']);
-        $assuntos = Questao::where('disciplina_id', $request->disciplina_id)->where('serie_id', $request->serie_id)
+        $request->validate([
+            'disciplina_id' => 'required|integer',
+            'serie_id' => 'required|integer'
+        ]);
+
+        $assuntos = Questao::where('disciplina_id', $request->disciplina_id)
+            // CORREÇÃO: Altera a busca para funcionar com a relação de muitas séries
+            ->whereHas('series', function ($query) use ($request) {
+                $query->where('series.id', $request->serie_id);
+            })
+            // FIM DA CORREÇÃO
             ->whereHas('disciplina', fn($q) => $q->where('escola_id', Auth::user()->escola_id))
-            ->distinct()->orderBy('assunto')->pluck('assunto');
+            ->distinct()
+            ->orderBy('assunto')
+            ->pluck('assunto');
+            
         return response()->json(['assuntos' => $assuntos]);
     }
 
