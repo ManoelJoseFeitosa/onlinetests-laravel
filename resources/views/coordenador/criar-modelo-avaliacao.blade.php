@@ -39,7 +39,9 @@
                     </div>
                 </div>
             </div>
-            <div id="regras-container"></div>
+            <div id="regras-container">
+                {{-- O conteúdo das regras será inserido aqui pelo JavaScript --}}
+            </div>
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">Salvar Modelo de Avaliação</button>
             </div>
@@ -49,19 +51,18 @@
     @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('modelo-form');
+        // --- ELEMENTOS DO DOM ---
         const tipoSelect = document.getElementById('tipo_modelo');
         const serieSelect = document.getElementById('serie_id');
         const regrasContainer = document.getElementById('regras-container');
+        const form = document.getElementById('modelo-form');
 
+        // --- DADOS E ROTAS VINDOS DO LARAVEL ---
         const allDisciplinas = @json($disciplinas->map(fn($d) => ['id' => $d->id, 'nome' => $d->nome]));
         const assuntosApiUrl = "{{ route('coordenador.modelos.api.assuntos') }}";
         const simuladoApiUrlBase = "{{ route('coordenador.modelos.api.conteudo-simulado', ['serie' => ':serieId']) }}";
 
-        function renderizarRegrasProva() { /* ...código JS... */ } // O JS pode ser o mesmo, mas vamos ajustar os fetches
-        // ... (restante do seu JS)
-
-        // ### CÓDIGO JS COMPLETO E AJUSTADO PARA O LARAVEL ###
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
         function renderizarRegrasProva() {
             const disciplinaOptions = allDisciplinas.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
             const provaHTML = `
@@ -70,16 +71,16 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="disciplina_id" class="form-label">Disciplina</label>
-                            <select id="disciplina_id" name="disciplina_id_0" class="form-select" required>
+                            <label for="disciplina_id_0" class="form-label">Disciplina</label>
+                            <select id="disciplina_id_0" name="disciplina_id_0" class="form-select" required>
                                 <option value="" selected disabled>-- Selecione a Disciplina --</option>
                                 ${disciplinaOptions}
                             </select>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="assuntos" class="form-label">Assuntos (segure Ctrl ou Shift para selecionar vários)</label>
-                        <select name="regra_0_assunto_0[]" id="assuntos" class="form-select" multiple required size="6">
+                        <label for="assuntos_0" class="form-label">Assuntos (segure Ctrl ou Shift para selecionar vários)</label>
+                        <select name="regra_0_assunto_0[]" id="assuntos_0" class="form-select" multiple required size="6">
                             <option disabled>Selecione uma disciplina para ver os assuntos.</option>
                         </select>
                     </div>
@@ -94,94 +95,69 @@
                 </div>
             </div>`;
             regrasContainer.innerHTML = provaHTML;
-            document.getElementById('disciplina_id').addEventListener('change', fetchAssuntos);
+            // Adiciona o listener para o novo campo de disciplina
+            document.getElementById('disciplina_id_0').addEventListener('change', fetchAssuntos);
         }
 
-        function renderizarRegrasSimulado(disciplinasDoSimulado) {
-            const simuladoHTML = disciplinasDoSimulado.map((disciplina, index) => `
-            <div class="card mb-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">${disciplina.nome}</h6>
-                    <input type="hidden" name="disciplina_id_${index}" value="${disciplina.id}">
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <p class="small fw-bold mb-2">Quantidade por Nível:</p>
-                        <div class="row">
-                            <div class="col-4"><label class="form-label text-success small">Fáceis</label><input type="number" name="regra_${index}_nivel_facil_qtd" class="form-control form-control-sm" min="0" value="0"></div>
-                            <div class="col-4"><label class="form-label text-primary small">Médias</label><input type="number" name="regra_${index}_nivel_media_qtd" class="form-control form-control-sm" min="0" value="0"></div>
-                            <div class="col-4"><label class="form-label text-danger small">Difíceis</label><input type="number" name="regra_${index}_nivel_dificil_qtd" class="form-control form-control-sm" min="0" value="0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>`).join('');
-            regrasContainer.innerHTML = `
-            <div class="card shadow-sm">
-                <div class="card-header"><h5 class="mb-0">2. Regras de Geração do Simulado</h5></div>
-                <div class="card-body">${simuladoHTML}</div>
-            </div>`;
-        }
-
+        // --- FUNÇÕES DE BUSCA (API) ---
         function fetchAssuntos() {
-            const disciplinaId = document.getElementById('disciplina_id').value;
-            const assuntosSelect = document.getElementById('assuntos');
-            const serieId = serieSelect.value;
-            if (!disciplinaId || !serieId) return;
+            const disciplinaId = document.getElementById('disciplina_id_0').value;
+            const assuntosSelect = document.getElementById('assuntos_0');
+            const serieId = serieSelect.value; // Pega o valor da série selecionada no topo da página
+
+            if (!disciplinaId || !serieId) {
+                assuntosSelect.innerHTML = '<option disabled>Selecione uma disciplina para ver os assuntos.</option>';
+                return;
+            }
+
             assuntosSelect.innerHTML = '<option disabled>Carregando...</option>';
+            
+            // CORREÇÃO: Constrói a URL com ambos os parâmetros
             const url = `${assuntosApiUrl}?disciplina_id=${disciplinaId}&serie_id=${serieId}`;
+
             fetch(url)
-                .then(response => response.ok ? response.json() : Promise.reject('Erro de rede'))
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro de rede ou servidor.');
+                    return response.json();
+                })
                 .then(data => {
                     if (data.assuntos && data.assuntos.length > 0) {
                         assuntosSelect.innerHTML = data.assuntos.map(assunto => `<option value="${assunto}">${assunto}</option>`).join('');
                     } else {
-                        assuntosSelect.innerHTML = '<option disabled>Nenhum assunto encontrado</option>';
+                        assuntosSelect.innerHTML = '<option disabled>Nenhum assunto com questões encontrado para esta série/disciplina.</option>';
                     }
                 })
                 .catch(error => {
-                    assuntosSelect.innerHTML = '<option disabled>Erro ao carregar assuntos</option>';
+                    console.error('Falha ao buscar assuntos:', error);
+                    assuntosSelect.innerHTML = '<option disabled>Erro ao carregar assuntos.</option>';
                 });
         }
 
-        function fetchConteudoSimulado() {
-            const serieId = serieSelect.value;
-            if (!serieId) return;
-            regrasContainer.innerHTML = '<p class="text-center text-muted p-4">Carregando disciplinas...</p>';
-            const url = simuladoApiUrlBase.replace(':serieId', serieId);
-            fetch(url)
-                .then(response => response.ok ? response.json() : Promise.reject('Erro de rede'))
-                .then(data => {
-                    if (data.error || !data || data.length === 0) {
-                        regrasContainer.innerHTML = '<div class="alert alert-warning">Nenhuma disciplina com questões encontradas para esta série.</div>';
-                    } else {
-                        renderizarRegrasSimulado(data);
-                    }
-                })
-                .catch(error => {
-                    regrasContainer.innerHTML = '<div class="alert alert-danger">Não foi possível carregar os dados.</div>';
-                });
-        }
-
+        // --- LÓGICA PRINCIPAL E EVENT LISTENERS ---
         function atualizarUI() {
             const tipo = tipoSelect.value;
             const serieId = serieSelect.value;
+
             if (!serieId) {
-                regrasContainer.innerHTML = '<div class="alert alert-info mt-3">Por favor, selecione uma série para continuar.</div>';
+                regrasContainer.innerHTML = '<div class="alert alert-info">Por favor, selecione uma série para definir as regras.</div>';
                 return;
             }
+
             if (tipo === 'prova') {
                 renderizarRegrasProva();
             } else if (tipo === 'simulado') {
-                fetchConteudoSimulado();
+                // A lógica de simulado pode ser adicionada aqui depois
+                 regrasContainer.innerHTML = ''; // Limpa para não mostrar regras de prova
+                // Chame aqui a sua função fetchConteudoSimulado() se/quando implementada
             }
         }
+
+        // Adiciona os listeners principais
         tipoSelect.addEventListener('change', atualizarUI);
         serieSelect.addEventListener('change', atualizarUI);
-        if (serieSelect.value) {
-            atualizarUI();
-        } else {
-            regrasContainer.innerHTML = '<div class="alert alert-info mt-3">Por favor, selecione uma série para continuar.</div>';
-        }
+
+        // Inicializa a UI ao carregar a página
+        atualizarUI();
     });
     </script>
     @endpush
