@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+// --- CORREÇÃO: Classes importadas ---
+use App\Models\Avaliacao;
 use App\Models\Questao;
-use App\Models\Resultado; // Adicionado para gerir os resultados
+use App\Models\Resultado;
+use App\Models\Serie;
+// --- FIM DA CORREÇÃO ---
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -14,7 +18,6 @@ class ProfessorController extends Controller
 {
     public function bancoQuestoes(): View
     {
-        // CORREÇÃO: Carrega a relação com 'series' (plural)
         $questoes = Questao::where('criador_id', Auth::id())
             ->with('disciplina', 'series')
             ->latest()
@@ -34,8 +37,8 @@ class ProfessorController extends Controller
     {
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
-            'series_ids' => 'required|array|min:1', // Agora espera um array de series
-            'series_ids.*' => 'exists:series,id', // Valida cada id no array
+            'series_ids' => 'required|array|min:1',
+            'series_ids.*' => 'exists:series,id',
             'assunto' => 'required|string|max:255', 'tipo' => 'required|string', 'nivel' => 'required|string', 'texto_questao' => 'required|string', 'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 'imagem_alt' => 'nullable|string|max:255', 'opcao_a' => 'nullable|string', 'opcao_b' => 'nullable|string', 'opcao_c' => 'nullable|string', 'opcao_d' => 'nullable|string',
             'gabarito' => [Rule::requiredIf($request->input('tipo') !== 'discursiva'), 'nullable', 'string', 'max:255'],
             'justificativa_gabarito' => 'nullable|string',
@@ -51,9 +54,7 @@ class ProfessorController extends Controller
             'criador_id' => Auth::id(),
         ]);
 
-        // Associa a questão às séries selecionadas
         $questao->series()->sync($validatedData['series_ids']);
-
         return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão criada com sucesso!');
     }
 
@@ -63,7 +64,7 @@ class ProfessorController extends Controller
         $user = Auth::user();
         $disciplinas = $user->disciplinasLecionadas()->orderBy('nome')->get();
         $series = $user->seriesLecionadas()->orderBy('nome')->get();
-        $questao->load('series'); // Carrega as séries já associadas
+        $questao->load('series');
         return view('professor.editar-questao', compact('questao', 'disciplinas', 'series'));
     }
 
@@ -72,7 +73,7 @@ class ProfessorController extends Controller
         if ($questao->criador_id !== Auth::id()) { abort(403); }
         $validatedData = $request->validate([
             'disciplina_id' => 'required|exists:disciplinas,id',
-            'series_ids' => 'required|array|min:1', // Validação para múltiplas séries
+            'series_ids' => 'required|array|min:1',
             'series_ids.*' => 'exists:series,id',
             'assunto' => 'required|string|max:255', 'tipo' => 'required|string', 'nivel' => 'required|string', 'texto_questao' => 'required|string', 'imagem_questao' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 'imagem_alt' => 'nullable|string|max:255', 'opcao_a' => 'nullable|string', 'opcao_b' => 'nullable|string', 'opcao_c' => 'nullable|string', 'opcao_d' => 'nullable|string',
             'gabarito' => [Rule::requiredIf($request->input('tipo') !== 'discursiva'), 'nullable', 'string', 'max:255'],
@@ -89,25 +90,71 @@ class ProfessorController extends Controller
         }
 
         $questao->update($dadosParaAtualizar);
-        $questao->series()->sync($validatedData['series_ids']); // Sincroniza as séries
-
+        $questao->series()->sync($validatedData['series_ids']);
         return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão atualizada com sucesso!');
     }
 
-    /**
-     * Mostra a página inicial para gerenciar notas, com o seletor de turmas.
-     */
     public function gerenciarNotas(): View
     {
         $series = Auth::user()->seriesLecionadas()->orderBy('nome')->get();
         return view('professor.notas.index', compact('series'));
     }
 
-    // --- MÉTODOS ADICIONADOS PARA GERIR BLOQUEIOS ---
+    /**
+     * Busca os dados (alunos, avaliações, resultados) para montar o boletim de uma turma.
+     */
+    public function buscarDadosBoletim(Serie $serie)
+    {
+        if (!Auth::user()->seriesLecionadas->contains($serie)) {
+            abort(403);
+        }
+
+        $alunos = $serie->alunos()->orderBy('nome')->get();
+        
+        // --- CORREÇÃO: Busca de avaliações otimizada ---
+        $avaliacoes = Avaliacao::where('serie_id', $serie->id)
+                                ->whereHas('resultados') // Apenas avaliações com resultados
+                                ->orderBy('nome')
+                                ->get();
+
+        $resultados = Resultado::whereIn('aluno_id', $alunos->pluck('id'))
+            ->whereIn('avaliacao_id', $avaliacoes->pluck('id'))
+            ->get()
+            ->keyBy(fn($item) => $item['aluno_id'] . '-' . $item['avaliacao_id']);
+
+        return response()->json([
+            'alunos' => $alunos,
+            'avaliacoes' => $avaliacoes,
+            'resultados' => $resultados,
+        ]);
+    }
 
     /**
-     * Lista as avaliações de alunos que foram bloqueadas.
+     * Atualiza a nota de um resultado específico.
      */
+    public function atualizarNota(Request $request, Resultado $resultado)
+    {
+        $dadosValidados = $request->validate([
+            'nova_nota' => 'required|numeric|min:0|max:10',
+            'justificativa' => 'nullable|string|max:500',
+        ]);
+        
+        if (is_null($resultado->nota_original)) {
+            $resultado->nota_original = $resultado->nota;
+        }
+
+        $resultado->nota = $dadosValidados['nova_nota'];
+        $resultado->justificativa_ajuste = $dadosValidados['justificativa'];
+        $resultado->nota_ajustada_por = Auth::id();
+        $resultado->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nota atualizada com sucesso!',
+            'nova_nota_formatada' => number_format($resultado->nota, 2, ',', '.')
+        ]);
+    }
+
     public function listarBloqueios()
     {
         $professor = auth()->user();
@@ -125,13 +172,8 @@ class ProfessorController extends Controller
         ]);
     }
 
-    /**
-     * Desbloqueia uma avaliação específica.
-     */
     public function desbloquearProva(Resultado $resultado)
     {
-        // Verificação de segurança: garante que o professor só pode desbloquear
-        // provas que ele mesmo criou.
         if ($resultado->avaliacao->criador_id !== Auth::id()) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -142,3 +184,4 @@ class ProfessorController extends Controller
                          ->with('success', 'A avaliação do aluno(a) ' . $resultado->aluno->nome . ' foi desbloqueada com sucesso!');
     }
 }
+
