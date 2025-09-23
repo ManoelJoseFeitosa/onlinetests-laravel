@@ -109,25 +109,49 @@ class ProfessorController extends Controller
             abort(403);
         }
 
-        $alunos = $serie->alunos()->orderBy('nome')->get();
-        
-        // --- CORREÇÃO: Busca de avaliações e resultados otimizada ---
-        $avaliacoes = Avaliacao::where('serie_id', $serie->id)
-                                ->whereHas('resultados') // Apenas avaliações com resultados
-                                ->orderBy('nome')
-                                ->get();
+        // --- CORREÇÃO DEFINITIVA ---
+        try {
+            // 1. Busca os alunos da série, selecionando apenas os campos necessários.
+            $alunos = $serie->alunos()->orderBy('nome')->get(['id', 'nome']);
 
-        $resultados = Resultado::whereIn('aluno_id', $alunos->pluck('id'))
-            ->whereIn('avaliacao_id', $avaliacoes->pluck('id'))
-            ->get()
-            ->keyBy(fn($item) => $item['aluno_id'] . '-' . $item['avaliacao_id']);
+            // 2. Busca as avaliações que tiveram resultados para esta série.
+            $avaliacoes = Avaliacao::where('serie_id', $serie->id)
+                                    ->whereHas('resultados')
+                                    ->orderBy('nome')
+                                    ->get(['id', 'nome']);
 
-        return response()->json([
-            'alunos' => $alunos,
-            'avaliacoes' => $avaliacoes,
-            'resultados' => $resultados,
-        ]);
+            // 3. Busca os resultados de forma otimizada.
+            $resultados = Resultado::whereIn('aluno_id', $alunos->pluck('id'))
+                ->whereIn('avaliacao_id', $avaliacoes->pluck('id'))
+                ->get(['id', 'aluno_id', 'avaliacao_id', 'nota']);
+
+            // 4. Monta um mapa de resultados para acesso rápido (aluno_id-avaliacao_id => resultado).
+            $resultadosMap = [];
+            foreach ($resultados as $resultado) {
+                $key = $resultado->aluno_id . '-' . $resultado->avaliacao_id;
+                $resultadosMap[$key] = [
+                    'id' => $resultado->id,
+                    'nota' => $resultado->nota
+                ];
+            }
+
+            // 5. Constrói a resposta JSON manualmente para garantir que não haja erros.
+            $alunosData = $alunos->map(fn($aluno) => ['id' => $aluno->id, 'nome' => $aluno->nome]);
+            $avaliacoesData = $avaliacoes->map(fn($av) => ['id' => $av->id, 'nome' => $av->nome]);
+
+            return response()->json([
+                'alunos' => $alunosData,
+                'avaliacoes' => $avaliacoesData,
+                'resultados' => $resultadosMap,
+            ]);
+
+        } catch (\Exception $e) {
+            // Em caso de qualquer erro inesperado, retorna um erro 500 com uma mensagem.
+            return response()->json(['error' => 'Ocorreu um erro interno ao buscar os dados.'], 500);
+        }
+        // --- FIM DA CORREÇÃO DEFINITIVA ---
     }
+
 
     /**
      * Atualiza a nota de um resultado específico.
