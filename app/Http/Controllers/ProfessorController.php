@@ -95,12 +95,10 @@ class ProfessorController extends Controller
         return redirect()->route('professor.banco-questoes.index')->with('success', 'Questão atualizada com sucesso!');
     }
     
-    // --- FUNÇÕES TOTALMENTE REESCRITAS ---
-    
     /**
      * Mostra a página para gerenciar notas. Agora, ela pode receber o ID da série pela URL.
      */
-    public function gerenciarNotas(Request $request) // <-- CORREÇÃO: Removido o tipo de retorno ": View"
+    public function gerenciarNotas(Request $request)
     {
         $professor = Auth::user();
         $series = $professor->seriesLecionadas()->orderBy('nome')->get();
@@ -110,27 +108,36 @@ class ProfessorController extends Controller
         $avaliacoes = collect();
         $resultadosMap = [];
 
-        // Verifica se uma turma foi selecionada via GET
         if ($request->has('serie_id')) {
-            $serieSelecionada = Serie::find($request->input('serie_id'));
+            $serieId = $request->input('serie_id');
+            // Busca a série apenas dentro da coleção de séries que o professor leciona (mais seguro)
+            $serieSelecionada = $series->firstWhere('id', $serieId);
             
-            // Segurança: Garante que o professor pode ver esta série
-            if ($serieSelecionada && $professor->seriesLecionadas->contains($serieSelecionada)) {
+            if ($serieSelecionada) {
                 try {
-                    $alunoIds = $serieSelecionada->alunos()->pluck('id');
-                    $resultados = Resultado::whereIn('aluno_id', $alunoIds)->get();
-                    $avaliacaoIds = $resultados->pluck('avaliacao_id')->unique();
-                    
-                    $alunos = $serieSelecionada->alunos()->whereIn('id', $alunoIds)->orderBy('nome')->get();
-                    $avaliacoes = Avaliacao::whereIn('id', $avaliacaoIds)->orderBy('nome')->get();
-                    
-                    foreach ($resultados as $resultado) {
-                        $key = $resultado->aluno_id . '-' . $resultado->avaliacao_id;
-                        $resultadosMap[$key] = $resultado;
+                    // Passo 1: Pega os alunos da turma.
+                    $alunos = $serieSelecionada->alunos()->orderBy('nome')->get();
+                    $alunoIds = $alunos->pluck('id');
+
+                    // Passo 2: Apenas continua se a turma tiver alunos.
+                    if ($alunoIds->isNotEmpty()) {
+                        // Passo 3: Pega os resultados destes alunos.
+                        $resultados = Resultado::whereIn('aluno_id', $alunoIds)->get();
+                        $avaliacaoIds = $resultados->pluck('avaliacao_id')->unique()->filter();
+
+                        // Passo 4: Apenas busca as avaliações se houver resultados.
+                        if ($avaliacaoIds->isNotEmpty()) {
+                            $avaliacoes = Avaliacao::whereIn('id', $avaliacaoIds)->orderBy('nome')->get();
+                        }
+
+                        // Passo 5: Monta o mapa de resultados para a view usar.
+                        foreach ($resultados as $resultado) {
+                            $key = $resultado->aluno_id . '-' . $resultado->avaliacao_id;
+                            $resultadosMap[$key] = $resultado;
+                        }
                     }
                 } catch (\Exception $e) {
                     Log::error('Erro crítico ao carregar dados do boletim: ' . $e->getMessage());
-                    // Redireciona de volta com um erro para evitar o "loading" infinito
                     return redirect()->route('professor.notas.index')->with('error', 'Não foi possível carregar os dados da turma. Tente novamente.');
                 }
             }
@@ -144,9 +151,6 @@ class ProfessorController extends Controller
             'resultadosMap' => $resultadosMap,
         ]);
     }
-
-    // O método buscarDadosBoletim NÃO É MAIS NECESSÁRIO e pode ser removido
-    // public function buscarDadosBoletim(Serie $serie) { ... }
 
 
     /**
