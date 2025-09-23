@@ -9,8 +9,8 @@ use App\Models\Resultado;
 use App\Models\Serie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // <-- IMPORTANTE: Adicionar DB
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log; // Importante para o debug
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
@@ -97,7 +97,7 @@ class ProfessorController extends Controller
     }
     
     /**
-     * Mostra a página para gerenciar notas. Abordagem final com DB Query Builder.
+     * Mostra a página para gerenciar notas. Abordagem com Debugging.
      */
     public function gerenciarNotas(Request $request)
     {
@@ -115,42 +115,54 @@ class ProfessorController extends Controller
             
             if ($serieSelecionada) {
                 try {
-                    // Passo 1: Buscar IDs dos alunos da série usando a tabela-pivô 'matriculas'.
+                    Log::info('--- INICIANDO DEBUG: GERENCIAR NOTAS ---');
+                    Log::info("Série ID selecionada: {$serieId}");
+
+                    // Passo 1: Buscar IDs dos alunos da série.
                     $alunoIds = DB::table('matriculas')
                         ->where('serie_id', $serieId)
                         ->pluck('user_id');
+                    Log::info('Passo 1: ' . $alunoIds->count() . ' IDs de alunos encontrados.');
 
                     if ($alunoIds->isEmpty()) {
-                        // Se não há alunos, não há nada a fazer, retorna a view com dados vazios.
+                        Log::info('Nenhum aluno encontrado. Retornando view vazia.');
                         return view('professor.notas.index', compact('series', 'serieSelecionada', 'alunos', 'avaliacoes', 'resultadosMap'));
                     }
 
-                    // Passo 2: Buscar alunos com os IDs encontrados.
+                    // Passo 2: Buscar alunos com os IDs.
                     $alunos = DB::table('users')->whereIn('id', $alunoIds)->orderBy('nome')->get();
+                    Log::info('Passo 2: ' . $alunos->count() . ' alunos buscados.');
 
                     // Passo 3: Buscar todos os resultados desses alunos.
                     $resultados = DB::table('resultados')->whereIn('aluno_id', $alunoIds)->get();
+                    Log::info('Passo 3: ' . $resultados->count() . ' resultados encontrados.');
                     $avaliacaoIds = $resultados->pluck('avaliacao_id')->unique()->filter();
 
                     if ($avaliacaoIds->isNotEmpty()) {
-                        // Passo 4: Buscar os nomes das avaliações correspondentes.
+                        Log::info('Passo 4: Buscando ' . $avaliacaoIds->count() . ' avaliações.');
+                        // Passo 4: Buscar os nomes das avaliações.
                         $avaliacoes = DB::table('avaliacaos')->whereIn('id', $avaliacaoIds)->orderBy('nome')->get();
+                        Log::info('Passo 4.1: ' . $avaliacoes->count() . ' avaliações encontradas.');
+                    } else {
+                        Log::info('Passo 4: Nenhum ID de avaliação para buscar.');
                     }
 
-                    // Passo 5: Montar o mapa de resultados.
+                    // Passo 5: Montar o mapa.
                     foreach ($resultados as $resultado) {
                         $key = $resultado->aluno_id . '-' . $resultado->avaliacao_id;
-                        // Armazena o objeto completo para a view
                         $resultadosMap[$key] = $resultado;
                     }
+                    Log::info('Passo 5: Mapa de resultados montado com sucesso.');
 
                 } catch (\Exception $e) {
-                    Log::error('Erro crítico no Gerenciar Notas com DB Query: ' . $e->getMessage());
+                    // Loga o erro exato que está a acontecer
+                    Log::error('ERRO CRÍTICO EM GERENCIAR NOTAS: ' . $e->getMessage() . ' no ficheiro ' . $e->getFile() . ' na linha ' . $e->getLine());
                     return redirect()->route('professor.notas.index')->with('error', 'Não foi possível carregar os dados da turma. Contacte o suporte.');
                 }
             }
         }
 
+        Log::info('--- FINALIZANDO DEBUG: Retornando a view ---');
         return view('professor.notas.index', [
             'series' => $series,
             'serieSelecionada' => $serieSelecionada,
@@ -213,7 +225,7 @@ class ProfessorController extends Controller
 
         $resultado->update(['is_blocked' => false]);
 
-        return redirect()->route('professor.bloqueios.index')
+        return redirect()->route('professor.notas.index')
                          ->with('success', 'A avaliação do aluno(a) ' . $resultado->aluno->nome . ' foi desbloqueada com sucesso!');
     }
 }
