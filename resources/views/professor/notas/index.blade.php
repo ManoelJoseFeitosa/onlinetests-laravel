@@ -4,6 +4,10 @@
     <div class="container mt-4">
         <h2 class="mb-4">Gerenciar Notas da Turma</h2>
 
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="mb-3">
@@ -11,26 +15,63 @@
                     <select id="serie_id" class="form-select">
                         <option value="">-- Selecione uma turma para começar --</option>
                         @foreach($series as $serie)
-                            <option value="{{ $serie->id }}">{{ $serie->nome }}</option>
+                            <option value="{{ $serie->id }}" @if($serieSelecionada && $serieSelecionada->id == $serie->id) selected @endif>
+                                {{ $serie->nome }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div id="boletim-container" class="table-responsive" style="display: none;">
-                    <table class="table table-bordered table-hover">
-                        <thead id="boletim-head"></thead>
-                        <tbody id="boletim-body"></tbody>
-                    </table>
-                </div>
-                <div id="loading" style="display: none;" class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                </div>
+                {{-- A tabela agora é renderizada diretamente com PHP --}}
+                @if($serieSelecionada)
+                    @if($alunos->isNotEmpty() && $avaliacoes->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Aluno</th>
+                                        @foreach($avaliacoes as $avaliacao)
+                                            <th>{{ $avaliacao->nome }}</th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($alunos as $aluno)
+                                        <tr>
+                                            <td>{{ $aluno->nome }}</td>
+                                            @foreach($avaliacoes as $avaliacao)
+                                                @php
+                                                    $key = $aluno->id . '-' . $avaliacao->id;
+                                                    $resultado = $resultadosMap[$key] ?? null;
+                                                @endphp
+                                                @if($resultado)
+                                                    <td class="text-center nota-editavel" style="cursor: pointer;"
+                                                        data-resultado-id="{{ $resultado->id }}" 
+                                                        data-aluno-nome="{{ $aluno->nome }}"
+                                                        data-avaliacao-nome="{{ $avaliacao->nome }}">
+                                                        {{ number_format($resultado->nota, 2, ',', '.') }}
+                                                    </td>
+                                                @else
+                                                    <td class="text-center">-</td>
+                                                @endif
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="alert alert-info text-center">
+                            Nenhum aluno ou avaliação com resultados encontrados para esta turma.
+                        </div>
+                    @endif
+                @endif
+
             </div>
         </div>
     </div>
 
+    {{-- O Modal de edição continua o mesmo --}}
     <div class="modal fade" id="editNoteModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -63,11 +104,19 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const serieSelect = document.getElementById('serie_id');
-        const container = document.getElementById('boletim-container');
-        const thead = document.getElementById('boletim-head');
-        const tbody = document.getElementById('boletim-body');
-        const loading = document.getElementById('loading');
         
+        // Novo script: Recarregar a página com o ID da série na URL
+        serieSelect.addEventListener('change', function() {
+            const serieId = this.value;
+            if (serieId) {
+                // Monta a nova URL e redireciona
+                window.location.href = `{{ route('professor.notas.index') }}?serie_id=${serieId}`;
+            } else {
+                 window.location.href = `{{ route('professor.notas.index') }}`;
+            }
+        });
+
+        // O script para o modal de edição continua o mesmo, pois é independente
         const editModal = new bootstrap.Modal(document.getElementById('editNoteModal'));
         const modalAluno = document.getElementById('modal-aluno-nome');
         const modalAvaliacao = document.getElementById('modal-avaliacao-nome');
@@ -75,78 +124,27 @@
         const modalNovaNota = document.getElementById('modal-nova-nota');
         const modalJustificativa = document.getElementById('modal-justificativa');
         const saveButton = document.getElementById('saveNoteButton');
+        const tbody = document.querySelector('.table tbody');
 
-        serieSelect.addEventListener('change', function() {
-            const serieId = this.value;
-            if (!serieId) {
-                container.style.display = 'none';
-                return;
-            }
-
-            loading.style.display = 'block';
-            container.style.display = 'none';
-
-            fetch(`/professor/turmas/${serieId}/dados-boletim`)
-                .then(response => response.json())
-                .then(data => {
-                    thead.innerHTML = '';
-                    tbody.innerHTML = '';
-
-                    if (data.avaliacoes.length === 0) {
-                        loading.style.display = 'none';
-                        container.style.display = 'block';
-                        tbody.innerHTML = '<tr><td class="text-center text-muted py-4">Nenhuma avaliação foi respondida por esta turma ainda.</td></tr>';
-                        return;
-                    }
-
-                    let headerRow = '<tr><th>Aluno</th>';
-                    data.avaliacoes.forEach(av => headerRow += `<th>${av.nome}</th>`);
-                    headerRow += '</tr>';
-                    thead.innerHTML = headerRow;
-
-                    data.alunos.forEach(aluno => {
-                        let bodyRow = `<tr><td>${aluno.nome}</td>`;
-                        data.avaliacoes.forEach(av => {
-                            const key = `${aluno.id}-${av.id}`;
-                            const resultado = data.resultados[key];
-                            if (resultado) {
-                                const notaFormatada = parseFloat(resultado.nota).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                                bodyRow += `<td class="text-center nota-editavel" style="cursor: pointer;"
-                                                data-resultado-id="${resultado.id}" 
-                                                data-aluno-nome="${aluno.nome}"
-                                                data-avaliacao-nome="${av.nome}">${notaFormatada}</td>`;
-                            } else {
-                                bodyRow += '<td class="text-center">-</td>';
-                            }
-                        });
-                        bodyRow += '</tr>';
-                        tbody.innerHTML += bodyRow;
-                    });
-                    
-                    loading.style.display = 'none';
-                    container.style.display = 'block';
-                });
-        });
-
-        tbody.addEventListener('click', function(e) {
-            if (e.target && e.target.classList.contains('nota-editavel')) {
-                const cell = e.target;
-                modalAluno.textContent = cell.dataset.alunoNome;
-                modalAvaliacao.textContent = cell.dataset.avaliacaoNome;
-                modalResultadoId.value = cell.dataset.resultadoId;
-                modalNovaNota.value = parseFloat(cell.textContent.replace(',', '.')).toFixed(2);
-                modalJustificativa.value = '';
-                editModal.show();
-            }
-        });
+        if (tbody) {
+            tbody.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('nota-editavel')) {
+                    const cell = e.target;
+                    modalAluno.textContent = cell.dataset.alunoNome;
+                    modalAvaliacao.textContent = cell.dataset.avaliacaoNome;
+                    modalResultadoId.value = cell.dataset.resultadoId;
+                    modalNovaNota.value = parseFloat(cell.textContent.replace(',', '.')).toFixed(2);
+                    modalJustificativa.value = '';
+                    editModal.show();
+                }
+            });
+        }
 
         saveButton.addEventListener('click', function() {
             const resultadoId = modalResultadoId.value;
             const novaNota = modalNovaNota.value;
             const justificativa = modalJustificativa.value;
 
-            // ### CORREÇÃO APLICADA AQUI ###
-            // A URL para salvar a nota estava incorreta.
             fetch(`/professor/resultados/${resultadoId}/atualizar-nota`, {
                 method: 'POST',
                 headers: {
