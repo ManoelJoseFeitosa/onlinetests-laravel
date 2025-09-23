@@ -10,6 +10,7 @@ use App\Models\Serie;
 // --- FIM DA CORREÇÃO ---
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // Adicionado para depuração
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
@@ -109,23 +110,21 @@ class ProfessorController extends Controller
             abort(403);
         }
 
-        // --- CORREÇÃO DEFINITIVA ---
         try {
-            // 1. Busca os alunos da série, selecionando apenas os campos necessários.
-            $alunos = $serie->alunos()->orderBy('nome')->get(['id', 'nome']);
+            // 1. Pega os IDs dos alunos da série.
+            $alunoIds = $serie->alunos()->pluck('id');
 
-            // 2. Busca as avaliações que tiveram resultados para esta série.
-            $avaliacoes = Avaliacao::where('serie_id', $serie->id)
-                                    ->whereHas('resultados')
-                                    ->orderBy('nome')
-                                    ->get(['id', 'nome']);
+            // 2. Pega os resultados desses alunos.
+            $resultados = Resultado::whereIn('aluno_id', $alunoIds)->get();
 
-            // 3. Busca os resultados de forma otimizada.
-            $resultados = Resultado::whereIn('aluno_id', $alunos->pluck('id'))
-                ->whereIn('avaliacao_id', $avaliacoes->pluck('id'))
-                ->get(['id', 'aluno_id', 'avaliacao_id', 'nota']);
+            // 3. A partir dos resultados, pega os IDs das avaliações realizadas.
+            $avaliacaoIds = $resultados->pluck('avaliacao_id')->unique();
 
-            // 4. Monta um mapa de resultados para acesso rápido (aluno_id-avaliacao_id => resultado).
+            // 4. Busca os dados dos alunos, avaliações e resultados necessários.
+            $alunos = $serie->alunos()->whereIn('id', $alunoIds)->orderBy('nome')->get(['id', 'nome']);
+            $avaliacoes = Avaliacao::whereIn('id', $avaliacaoIds)->orderBy('nome')->get(['id', 'nome']);
+
+            // 5. Monta o mapa de resultados para acesso rápido.
             $resultadosMap = [];
             foreach ($resultados as $resultado) {
                 $key = $resultado->aluno_id . '-' . $resultado->avaliacao_id;
@@ -135,21 +134,16 @@ class ProfessorController extends Controller
                 ];
             }
 
-            // 5. Constrói a resposta JSON manualmente para garantir que não haja erros.
-            $alunosData = $alunos->map(fn($aluno) => ['id' => $aluno->id, 'nome' => $aluno->nome]);
-            $avaliacoesData = $avaliacoes->map(fn($av) => ['id' => $av->id, 'nome' => $av->nome]);
-
             return response()->json([
-                'alunos' => $alunosData,
-                'avaliacoes' => $avaliacoesData,
+                'alunos' => $alunos,
+                'avaliacoes' => $avaliacoes,
                 'resultados' => $resultadosMap,
             ]);
 
         } catch (\Exception $e) {
-            // Em caso de qualquer erro inesperado, retorna um erro 500 com uma mensagem.
-            return response()->json(['error' => 'Ocorreu um erro interno ao buscar os dados.'], 500);
+            Log::error('Erro em buscarDadosBoletim: ' . $e->getMessage());
+            return response()->json(['error' => 'Ocorreu um erro interno ao processar os dados da turma.'], 500);
         }
-        // --- FIM DA CORREÇÃO DEFINITIVA ---
     }
 
 
