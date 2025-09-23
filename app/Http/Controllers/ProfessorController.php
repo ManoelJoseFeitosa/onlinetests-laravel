@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Questao;
+use App\Models\Resultado; // Adicionado para gerir os resultados
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -94,73 +95,50 @@ class ProfessorController extends Controller
     }
 
     /**
- * Mostra a página inicial para gerenciar notas, com o seletor de turmas.
- */
-public function gerenciarNotas(): View
-{
-    $series = Auth::user()->seriesLecionadas()->orderBy('nome')->get();
-    return view('professor.notas.index', compact('series'));
-}
-
-/**
- * Busca os dados (alunos, avaliações, resultados) para montar o boletim de uma turma.
- */
-public function buscarDadosBoletim(Serie $serie)
-{
-    // Garante que o professor só acesse turmas que ele leciona
-    if (!Auth::user()->seriesLecionadas->contains($serie)) {
-        abort(403);
+     * Mostra a página inicial para gerenciar notas, com o seletor de turmas.
+     */
+    public function gerenciarNotas(): View
+    {
+        $series = Auth::user()->seriesLecionadas()->orderBy('nome')->get();
+        return view('professor.notas.index', compact('series'));
     }
 
-    // Pega todos os alunos matriculados na série
-    $alunos = $serie->alunos()->orderBy('nome')->get();
+    // --- MÉTODOS ADICIONADOS PARA GERIR BLOQUEIOS ---
 
-    // Pega todas as avaliações que os alunos desta série já realizaram
-    $avaliacoes = Avaliacao::whereHas('resultados.aluno.matriculas', function ($query) use ($serie) {
-        $query->where('serie_id', $serie->id);
-    })->orderBy('nome')->get();
+    /**
+     * Lista as avaliações de alunos que foram bloqueadas.
+     */
+    public function listarBloqueios()
+    {
+        $professor = auth()->user();
 
-    // Pega todos os resultados dos alunos desta série de uma vez para otimizar a busca
-    $resultados = Resultado::whereIn('aluno_id', $alunos->pluck('id'))
-                           ->whereIn('avaliacao_id', $avaliacoes->pluck('id'))
-                           ->get()
-                           ->keyBy(function ($item) {
-                               return $item['aluno_id'] . '-' . $item['avaliacao_id'];
-                           });
+        $resultados_bloqueados = Resultado::where('is_blocked', true)
+            ->whereHas('avaliacao', function ($query) use ($professor) {
+                $query->where('criador_id', $professor->id);
+            })
+            ->with(['aluno', 'avaliacao'])
+            ->latest()
+            ->get();
 
-    return response()->json([
-        'alunos' => $alunos,
-        'avaliacoes' => $avaliacoes,
-        'resultados' => $resultados,
-    ]);
-}
-
-/**
- * Atualiza a nota de um resultado específico.
- */
-public function atualizarNota(Request $request, Resultado $resultado)
-{
-    // Validação
-    $dadosValidados = $request->validate([
-        'nova_nota' => 'required|numeric|min:0|max:10',
-        'justificativa' => 'nullable|string|max:500',
-    ]);
-
-    // Lógica de auditoria
-    // Se a nota_original ainda não foi definida, salva a nota atual antes de alterar.
-    if (is_null($resultado->nota_original)) {
-        $resultado->nota_original = $resultado->nota;
+        return view('professor.bloqueios.index', [
+            'resultados_bloqueados' => $resultados_bloqueados
+        ]);
     }
 
-    $resultado->nota = $dadosValidados['nova_nota'];
-    $resultado->justificativa_ajuste = $dadosValidados['justificativa'];
-    $resultado->nota_ajustada_por = Auth::id();
-    $resultado->save();
+    /**
+     * Desbloqueia uma avaliação específica.
+     */
+    public function desbloquearProva(Resultado $resultado)
+    {
+        // Verificação de segurança: garante que o professor só pode desbloquear
+        // provas que ele mesmo criou.
+        if ($resultado->avaliacao->criador_id !== Auth::id()) {
+            abort(403, 'Acesso não autorizado.');
+        }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Nota atualizada com sucesso!',
-        'nova_nota_formatada' => number_format($resultado->nota, 2, ',', '.')
-    ]);
-}
+        $resultado->update(['is_blocked' => false]);
+
+        return redirect()->route('professor.bloqueios.index')
+                         ->with('success', 'A avaliação do aluno(a) ' . $resultado->aluno->nome . ' foi desbloqueada com sucesso!');
+    }
 }
