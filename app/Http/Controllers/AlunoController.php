@@ -45,103 +45,108 @@ class AlunoController extends Controller
         return view('aluno.avaliacoes.index', ['avaliacoes_disponiveis' => $avaliacoes_disponiveis]);
     }
 
-    /**
+   /**
      * Gera uma instância de Avaliacao a partir de um Modelo e redireciona para a prova.
      */
-public function iniciarAvaliacaoDinamica(ModeloAvaliacao $modeloAvaliacao)
-{
-    $aluno = Auth::user();
-    $ano_letivo_ativo = AnoLetivo::where('escola_id', $aluno->escola_id)->where('status', 'ativo')->firstOrFail();
+    public function iniciarAvaliacaoDinamica(ModeloAvaliacao $modeloAvaliacao)
+    {
+        $aluno = Auth::user();
+        $ano_letivo_ativo = AnoLetivo::where('escola_id', $aluno->escola_id)->where('status', 'ativo')->firstOrFail();
 
-    $questoes_selecionadas_ids = [];
-    $regras = $modeloAvaliacao->regras_selecao;
-    $regras_disciplinas = $regras['disciplinas'] ?? []; // <-- ALTERAÇÃO: Guarda as regras de disciplina
+        $questoes_selecionadas_ids = [];
+        $regras = $modeloAvaliacao->regras_selecao;
+        $regras_disciplinas = $regras['disciplinas'] ?? [];
 
-    foreach ($regras_disciplinas as $regra_disciplina) {
-        // Pega os assuntos definidos para esta disciplina no modelo
-        $assuntos = collect($regra_disciplina['questoes_por_assunto'] ?? [])->pluck('assunto')->toArray();
+        foreach ($regras_disciplinas as $regra_disciplina) {
+            $assuntos = collect($regra_disciplina['questoes_por_assunto'] ?? [])->pluck('assunto')->toArray();
 
-        foreach ($regra_disciplina['questoes_por_nivel'] ?? [] as $regra_nivel) {
-            $quantidade_desejada = $regra_nivel['quantidade'];
-            $nivel_desejado = $regra_nivel['nivel'];
+            foreach ($regra_disciplina['questoes_por_nivel'] ?? [] as $regra_nivel) {
+                $quantidade_desejada = $regra_nivel['quantidade'];
+                $nivel_desejado = $regra_nivel['nivel'];
 
-            if ($quantidade_desejada == 0) continue; 
+                if ($quantidade_desejada == 0) continue;
 
-            // Prepara a consulta base para esta regra
-            $query_base = Questao::where('disciplina_id', $regra_disciplina['id'])
-                                ->where('serie_id', $modeloAvaliacao->serie_id)
-                                ->whereNotIn('id', $questoes_selecionadas_ids);
-            
-            if (!empty($assuntos)) {
-                $query_base->whereIn('assunto', $assuntos);
-            }
-
-            // 1. Tenta buscar as questões no nível ideal, de forma aleatória
-            $questoes_ideais = (clone $query_base)
-                                ->where('nivel', $nivel_desejado)
-                                ->inRandomOrder()
-                                ->limit($quantidade_desejada)
-                                ->pluck('id');
-            
-            // Adiciona as questões encontradas à lista principal
-            $questoes_selecionadas_ids = array_merge($questoes_selecionadas_ids, $questoes_ideais->toArray());
-
-            // 2. Calcula se faltam questões
-            $deficit = $quantidade_desejada - $questoes_ideais->count();
-
-            // 3. Se faltarem questões, busca em outros níveis como fallback
-            if ($deficit > 0) {
-                $questoes_fallback = (clone $query_base)
-                                    ->where('nivel', '!=', $nivel_desejado) 
-                                    ->orderByRaw("FIELD(nivel, 'facil', 'media', 'dificil')")
-                                    ->limit($deficit)
-                                    ->pluck('id');
+                // Prepara a consulta base para esta regra
+                $query_base = Questao::where('disciplina_id', $regra_disciplina['id'])
+                    // CORREÇÃO: Usa whereHas para consultar a relação muitos-para-muitos com Series
+                    ->whereHas('series', function ($query) use ($modeloAvaliacao) {
+                        $query->where('series.id', $modeloAvaliacao->serie_id);
+                    })
+                    ->whereNotIn('id', $questoes_selecionadas_ids);
                 
-                $questoes_selecionadas_ids = array_merge($questoes_selecionadas_ids, $questoes_fallback->toArray());
+                if (!empty($assuntos)) {
+                    $query_base->whereIn('assunto', $assuntos);
+                }
+
+                // 1. Tenta buscar as questões no nível ideal, de forma aleatória
+                $questoes_ideais = (clone $query_base)
+                                        ->where('nivel', $nivel_desejado)
+                                        ->inRandomOrder()
+                                        ->limit($quantidade_desejada)
+                                        ->pluck('id');
+                
+                $questoes_selecionadas_ids = array_merge($questoes_selecionadas_ids, $questoes_ideais->toArray());
+                
+                $deficit = $quantidade_desejada - $questoes_ideais->count();
+
+                // 3. Se faltarem questões, busca em outros níveis como fallback
+                if ($deficit > 0) {
+                    $questoes_fallback = (clone $query_base)
+                                        ->where('nivel', '!=', $nivel_desejado) 
+                                        ->orderByRaw("FIELD(nivel, 'facil', 'media', 'dificil')")
+                                        ->limit($deficit)
+                                        ->pluck('id');
+                    
+                    $questoes_selecionadas_ids = array_merge($questoes_selecionadas_ids, $questoes_fallback->toArray());
+                }
             }
         }
-    }
-    
-    // Impede a criação de prova sem questões
-    if (empty($questoes_selecionadas_ids)) {
-        return redirect()->route('aluno.avaliacoes.index')->with('error', 'Não foi possível gerar a avaliação. Não há questões suficientes no banco que atendam às regras do modelo.');
-    }
-
-    // <-- Determina a disciplina da avaliação -->
-    $disciplina_id_final = null;
-    if (count($regras_disciplinas) === 1) {
-        // Se a avaliação dinâmica é baseada em UMA única disciplina, atribuímos o ID dela.
-        $disciplina_id_final = $regras_disciplinas[0]['id'];
-    }
-
-    $avaliacao = DB::transaction(function() use ($modeloAvaliacao, $aluno, $ano_letivo_ativo, $questoes_selecionadas_ids, $disciplina_id_final) { // <-- ALTERAÇÃO: Passa a variável para a transaction
-        $avaliacao = Avaliacao::create([
-            'nome' => $modeloAvaliacao->nome, 
-            'tipo' => $modeloAvaliacao->tipo, 
-            'tempo_limite' => $modeloAvaliacao->tempo_limite, 
-            'criador_id' => $modeloAvaliacao->criador_id, 
-            'disciplina_id' => $disciplina_id_final, // <-- Define o ID da disciplina aqui!
-            'serie_id' => $modeloAvaliacao->serie_id, 
-            'escola_id' => $aluno->escola_id, 
-            'ano_letivo_id' => $ano_letivo_ativo->id, 
-            'is_dinamica' => true, 
-            'modelo_id' => $modeloAvaliacao->id,
-        ]);
         
-        $avaliacao->questoes()->sync($questoes_selecionadas_ids);
-        
-        $avaliacao->resultados()->create([
-            'aluno_id' => $aluno->id, 
-            'ano_letivo_id' => $ano_letivo_ativo->id,
-            'data_realizacao' => now(), 
-            'status' => 'Iniciada'
-        ]);
-        
-        return $avaliacao;
-    });
+        // Valida se o número total de questões encontradas atende ao total desejado
+        $total_desejado = 0;
+        foreach($regras_disciplinas as $rd) {
+            foreach($rd['questoes_por_nivel'] ?? [] as $rn) {
+                $total_desejado += $rn['quantidade'];
+            }
+        }
 
-    return redirect()->route('aluno.avaliacoes.responder', $avaliacao);
-}
+        if (count($questoes_selecionadas_ids) < $total_desejado) {
+            return redirect()->route('aluno.avaliacoes.index')->with('error', 'Não foi possível gerar a avaliação. Não há questões suficientes no banco que atendam às regras do modelo.');
+        }
+
+        $disciplina_id_final = null;
+        if (count($regras_disciplinas) === 1) {
+            $disciplina_id_final = $regras_disciplinas[0]['id'];
+        }
+
+        $avaliacao = DB::transaction(function() use ($modeloAvaliacao, $aluno, $ano_letivo_ativo, $questoes_selecionadas_ids, $disciplina_id_final) {
+            $avaliacao = Avaliacao::create([
+                'nome' => $modeloAvaliacao->nome, 
+                'tipo' => $modeloAvaliacao->tipo, 
+                'tempo_limite' => $modeloAvaliacao->tempo_limite, 
+                'criador_id' => $modeloAvaliacao->criador_id, 
+                'disciplina_id' => $disciplina_id_final,
+                'serie_id' => $modeloAvaliacao->serie_id, 
+                'escola_id' => $aluno->escola_id, 
+                'ano_letivo_id' => $ano_letivo_ativo->id, 
+                'is_dinamica' => true, 
+                'modelo_id' => $modeloAvaliacao->id,
+            ]);
+            
+            $avaliacao->questoes()->sync($questoes_selecionadas_ids);
+            
+            $avaliacao->resultados()->create([
+                'aluno_id' => $aluno->id, 
+                'ano_letivo_id' => $ano_letivo_ativo->id,
+                'data_realizacao' => now(), 
+                'status' => 'Iniciada'
+            ]);
+            
+            return $avaliacao;
+        });
+
+        return redirect()->route('aluno.avaliacoes.responder', $avaliacao);
+    }
 
     /**
      * Mostra a tela para o aluno responder uma avaliação.
