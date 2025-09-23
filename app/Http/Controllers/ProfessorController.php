@@ -111,7 +111,7 @@ class ProfessorController extends Controller
 
         $alunos = $serie->alunos()->orderBy('nome')->get();
         
-        // --- CORREÇÃO: Busca de avaliações otimizada ---
+        // --- CORREÇÃO: Busca de avaliações e resultados otimizada ---
         $avaliacoes = Avaliacao::where('serie_id', $serie->id)
                                 ->whereHas('resultados') // Apenas avaliações com resultados
                                 ->orderBy('nome')
