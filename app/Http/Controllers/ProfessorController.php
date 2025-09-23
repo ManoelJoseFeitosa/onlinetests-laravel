@@ -100,7 +100,7 @@ class ProfessorController extends Controller
     /**
      * Mostra a página para gerenciar notas. Agora, ela pode receber o ID da série pela URL.
      */
-    public function gerenciarNotas(Request $request): View
+    public function gerenciarNotas(Request $request) // <-- CORREÇÃO: Removido o tipo de retorno ": View"
     {
         $professor = Auth::user();
         $series = $professor->seriesLecionadas()->orderBy('nome')->get();
