@@ -41,10 +41,14 @@ Route::get('/documentos', function () {
     return view('documentos', ['documentos' => $documentos]);
 })->name('documentos');
 
-// Rotas de Contato
+// --- CORREÇÃO DE ROTAS DE CONTATO ---
 Route::get('/contato', [ContatoController::class, 'create'])->name('contato');
-Route::post('/contato', [ContatoController::class, 'store'])->name('contato.store');
-// Rota Adicionada para Envio de E-mail (PublicContactController)
+
+// Forçamos a rota antiga (contato.store) a usar o NOVO controlador (PublicContactController)
+// Isso resolve o problema caso o formulário HTML ainda esteja apontando para a rota antiga.
+Route::post('/contato', [PublicContactController::class, 'submit'])->name('contato.store');
+
+// Mantemos a rota nova também, por garantia
 Route::post('/contato/enviar', [PublicContactController::class, 'submit'])->name('contact.submit');
 
 Route::get('/politica-de-privacidade', function () { return view('politica-de-privacidade'); })->name('politica.privacidade');
