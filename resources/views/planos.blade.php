@@ -5,7 +5,7 @@
                 <h1 class="display-5 fw-bold">Planos que se adaptam à sua realidade</h1>
                 <p class="lead text-muted mb-0">Escolha a opção que melhor atende às necessidades da sua instituição.</p>
             </div>
-            <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo Online Tests" style="width: 150px; height: auto;" class="d-none d-md-block rounded">
+            <img src="{{ asset('images/Logo_mafe_provasonline.png') }}" alt="Logo Online Tests" style="width: 150px; height: auto;" class="d-none d-md-block rounded">
         </div>
         <hr class="mb-5">
         <div class="row row-cols-1 row-cols-md-3 g-4 text-center">

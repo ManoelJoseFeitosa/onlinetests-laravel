@@ -2,17 +2,17 @@
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="display-4 fw-bold">OnlineTests</h1>
+                <h1 class="display-4 fw-bold">MaFe Provas Online</h1>
                 <p class="lead text-muted mb-0">Plataforma Web + App Android para Avaliações</p>
             </div>
-            <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo Online Tests" style="width: 180px; height: auto;" class="d-none d-md-block rounded">
+            <img src="{{ asset('images/Logo_mafe_provasonline.png') }}" alt="Logo Online Tests" style="width: 180px; height: auto;" class="d-none d-md-block rounded">
         </div>
 
         <hr class="mb-5">
 
         <div class="text-center mb-5">
             <h2 class="display-5 fw-bold">Uma Solução Completa, Pensada para a Educação</h2>
-            <p class="lead text-muted col-lg-8 mx-auto">Do planejamento na plataforma web à aplicação segura no App Android, descubra as ferramentas que fazem do OnlineTests a solução definitiva para a gestão de avaliações da sua escola.</p>
+            <p class="lead text-muted col-lg-8 mx-auto">Do planejamento na plataforma web à aplicação segura no App Android, descubra as ferramentas que fazem do MaFe Provas Online a solução definitiva para a gestão de avaliações da sua escola.</p>
         </div>
 
         {{-- Seção App Android --}}
@@ -22,7 +22,7 @@
             </div>
             <div class="col-md-8">
                 <h3><i class="bi bi-google-play me-2"></i>Aplicativo Android para Provas na Escola</h3>
-                <p>Leve a segurança do OnlineTests para o ambiente presencial com nosso aplicativo exclusivo para tablets e celulares Android.</p>
+                <p>Leve a segurança do Mafe Provas Online para o ambiente presencial com nosso aplicativo exclusivo para tablets e celulares Android.</p>
                 <ul>
                     <li><strong>Ambiente Controlado e Seguro:</strong> O aplicativo opera em modo de tela cheia, bloqueando notificações e o acesso a outros apps para evitar fraudes.</li>
                     <li><strong>Aplicação Offline:</strong> As provas podem ser baixadas previamente, permitindo que os alunos respondam mesmo com internet instável.</li>

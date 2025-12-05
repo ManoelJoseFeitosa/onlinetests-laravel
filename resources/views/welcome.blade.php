@@ -9,7 +9,7 @@
                         <h1 class="display-4 fw-bold">Plataforma de Avaliação Online para sua Escola</h1>
                         <p class="lead text-muted mb-0">A solução completa para avaliações na sua instituição, agora com App para Android.</p>
                     </div>
-                    <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo Online Tests" style="width: 180px; height: auto;" class="d-none d-md-block rounded">
+                    <img src="{{ asset('images/Logo_mafe_provasonline.png') }}" alt="Logo Online Tests" style="width: 180px; height: auto;" class="d-none d-md-block rounded">
                 </div>
 
                 <hr>
@@ -19,7 +19,7 @@
                 </div>
 
                 <p class="mt-5" style="text-align: justify; font-size: 1.15rem; line-height: 1.7;">
-                    O OnlineTests é uma solução moderna e robusta, desenvolvida para as necessidades das escolas. Composta por uma plataforma web e um <strong>aplicativo para dispositivos móveis Android</strong>, ela foi projetada para transformar a maneira como sua instituição de ensino cria, gerencia e aplica avaliações. Com uma interface intuitiva, a plataforma centraliza todo o ciclo avaliativo, oferecendo ferramentas poderosas para cada perfil: Coordenadores, Professores e Alunos.
+                    O MaFe Provas Online é uma solução moderna e robusta, desenvolvida para as necessidades das escolas. Composta por uma plataforma web e um <strong>aplicativo para dispositivos móveis Android</strong>, ela foi projetada para transformar a maneira como sua instituição de ensino cria, gerencia e aplica avaliações. Com uma interface intuitiva, a plataforma centraliza todo o ciclo avaliativo, oferecendo ferramentas poderosas para cada perfil: Coordenadores, Professores e Alunos.
                 </p>
                 <p class="mt-4" style="text-align: justify; font-size: 1.15rem; line-height: 1.7;">
                     Para o corpo docente, a plataforma representa uma revolução na rotina diária. Ao automatizar a correção de provas e simulados, ela <strong>agiliza drasticamente o tempo do professor</strong>, permitindo que ele se dedique mais ao planejamento pedagógico e menos às tarefas repetitivas. Além disso, a digitalização <strong>evita que o professor precise carregar grandes volumes de papel</strong>, mantendo todas as avaliações organizadas e acessíveis em um único lugar.
@@ -36,7 +36,7 @@
                         <div class="col-md-9 text-md-start">
                             <h2 class="fw-bold">Conheça nosso App para Aplicação de Provas e Acesso a Plataforma</h2>
                             <p class="lead my-3">
-                                Leve a segurança e o controle do OnlineTests para dentro da sala de aula com nosso <strong>aplicativo exclusivo para tablets e celulares Android</strong>. Crie um ambiente de provas controlado, seguro e livre de distrações, garantindo a integridade do processo avaliativo diretamente nos dispositivos da escola.
+                                Leve a segurança e o controle do MaFe Provas Online para dentro da sala de aula com nosso <strong>aplicativo exclusivo para tablets e celulares Android</strong>. Crie um ambiente de provas controlado, seguro e livre de distrações, garantindo a integridade do processo avaliativo diretamente nos dispositivos da escola.
                             </p>
                             <a href="#" class="btn btn-light btn-lg">
                                 <i class="bi bi-arrow-right-circle me-2"></i>Saiba Mais

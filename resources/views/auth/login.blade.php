@@ -6,7 +6,7 @@
                 <div class="text-center mb-4">
                     <a href="/">
                         {{-- Coloque o nome da sua logo aqui se for diferente --}}
-                        <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo OnlineTests" style="width: 180px; height: auto;" class="rounded">
+                        <img src="{{ asset('images/Logo_mafe_provasonline.png') }}" alt="Logo OnlineTests" style="width: 180px; height: auto;" class="rounded">
                     </a>
                 </div>
 

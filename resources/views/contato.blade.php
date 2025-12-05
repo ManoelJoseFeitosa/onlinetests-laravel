@@ -5,7 +5,7 @@
                 <h1 class="display-5 fw-bold">Fale Conosco</h1>
                 <p class="lead text-muted mb-0">Estamos prontos para tirar suas dúvidas ou agendar uma demonstração completa.</p>
             </div>
-            <img src="{{ asset('images/onlinetests.jpg') }}" alt="Logo Online Tests" style="width: 150px; height: auto;" class="d-none d-md-block rounded">
+            <img src="{{ asset('images/Logo_mafe_provasonline.png') }}" alt="Logo Online Tests" style="width: 150px; height: auto;" class="d-none d-md-block rounded">
         </div>
         <hr class="mb-5">
         <div class="row justify-content-center">

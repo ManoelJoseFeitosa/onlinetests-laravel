@@ -20,7 +20,7 @@
             <div class="container-fluid">
                 <a class="navbar-brand fw-bold" href="{{ url('/') }}">
                     <i class="bi bi-pencil-square"></i>
-                    OnlineTests
+                    MaFe Provas Online
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
