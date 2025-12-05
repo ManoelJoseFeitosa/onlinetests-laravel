@@ -16,6 +16,7 @@ use App\Http\Controllers\ContatoController;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\PublicContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +40,13 @@ Route::get('/documentos', function () {
     $documentos = Documento::where('ativo', true)->latest()->get();
     return view('documentos', ['documentos' => $documentos]);
 })->name('documentos');
+
+// Rotas de Contato
 Route::get('/contato', [ContatoController::class, 'create'])->name('contato');
 Route::post('/contato', [ContatoController::class, 'store'])->name('contato.store');
+// Rota Adicionada para Envio de E-mail (PublicContactController)
+Route::post('/contato/enviar', [PublicContactController::class, 'submit'])->name('contact.submit');
+
 Route::get('/politica-de-privacidade', function () { return view('politica-de-privacidade'); })->name('politica.privacidade');
 Route::get('/documentos', [DocumentoController::class, 'indexPublico'])->name('documentos.publico');
 
@@ -135,35 +141,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Rotas do Professor --
-Route::prefix('professor')->name('professor.')->group(function () {
-    // ... rotas de banco de questoes, modelos, etc.
-    Route::get('/banco-questoes', [ProfessorController::class, 'bancoQuestoes'])->name('banco-questoes.index');
-    Route::get('/banco-questoes/criar', [ProfessorController::class, 'criarQuestao'])->name('banco-questoes.create');
-    Route::post('/banco-questoes', [ProfessorController::class, 'salvarQuestao'])->name('banco-questoes.store')->middleware('check.plan:1');
-    Route::get('/banco-questoes/{questao}/editar', [ProfessorController::class, 'editarQuestao'])->name('banco-questoes.edit');
-    Route::put('/banco-questoes/{questao}', [ProfessorController::class, 'atualizarQuestao'])->name('banco-questoes.update');
-    Route::prefix('modelos-avaliacao')->name('modelos.')->group(function () {
-        Route::get('/criar', [ModeloAvaliacaoController::class, 'create'])->name('create');
-    });
-    Route::prefix('recuperacoes')->name('recuperacoes.')->group(function () {
-        Route::get('/criar', [RecuperacaoController::class, 'create'])->name('create');
-    });
-    Route::prefix('minhas-avaliacoes')->name('avaliacoes.')->group(function () {
-        Route::get('/', [ModeloAvaliacaoController::class, 'index'])->name('index');
-        Route::get('/{modelo}', [ModeloAvaliacaoController::class, 'show'])->name('show');
-        Route::delete('/{modelo}', [ModeloAvaliacaoController::class, 'destroy'])->name('destroy');
-    });
-    Route::prefix('desempenho')->name('desempenho.')->group(function () {
-        Route::get('/', [DesempenhoController::class, 'index'])->name('index');
-    });
+    Route::prefix('professor')->name('professor.')->group(function () {
+        // ... rotas de banco de questoes, modelos, etc.
+        Route::get('/banco-questoes', [ProfessorController::class, 'bancoQuestoes'])->name('banco-questoes.index');
+        Route::get('/banco-questoes/criar', [ProfessorController::class, 'criarQuestao'])->name('banco-questoes.create');
+        Route::post('/banco-questoes', [ProfessorController::class, 'salvarQuestao'])->name('banco-questoes.store')->middleware('check.plan:1');
+        Route::get('/banco-questoes/{questao}/editar', [ProfessorController::class, 'editarQuestao'])->name('banco-questoes.edit');
+        Route::put('/banco-questoes/{questao}', [ProfessorController::class, 'atualizarQuestao'])->name('banco-questoes.update');
+        Route::prefix('modelos-avaliacao')->name('modelos.')->group(function () {
+            Route::get('/criar', [ModeloAvaliacaoController::class, 'create'])->name('create');
+        });
+        Route::prefix('recuperacoes')->name('recuperacoes.')->group(function () {
+            Route::get('/criar', [RecuperacaoController::class, 'create'])->name('create');
+        });
+        Route::prefix('minhas-avaliacoes')->name('avaliacoes.')->group(function () {
+            Route::get('/', [ModeloAvaliacaoController::class, 'index'])->name('index');
+            Route::get('/{modelo}', [ModeloAvaliacaoController::class, 'show'])->name('show');
+            Route::delete('/{modelo}', [ModeloAvaliacaoController::class, 'destroy'])->name('destroy');
+        });
+        Route::prefix('desempenho')->name('desempenho.')->group(function () {
+            Route::get('/', [DesempenhoController::class, 'index'])->name('index');
+        });
 
-    Route::get('/bloqueios', [ProfessorController::class, 'listarBloqueios'])->name('bloqueios.index');
-    Route::post('/bloqueios/{resultado}/desbloquear', [ProfessorController::class, 'desbloquearProva'])->name('bloqueios.desbloquear');
-    
-    Route::get('/gerenciar-notas', [ProfessorController::class, 'gerenciarNotas'])->name('notas.index');
-    Route::get('/turmas/{serie}/dados-boletim', [ProfessorController::class, 'buscarDadosBoletim'])->name('notas.dadosBoletim');
-    Route::post('/resultados/{resultado}/atualizar-nota', [ProfessorController::class, 'atualizarNota'])->name('notas.update');
-});
+        Route::get('/bloqueios', [ProfessorController::class, 'listarBloqueios'])->name('bloqueios.index');
+        Route::post('/bloqueios/{resultado}/desbloquear', [ProfessorController::class, 'desbloquearProva'])->name('bloqueios.desbloquear');
+        
+        Route::get('/gerenciar-notas', [ProfessorController::class, 'gerenciarNotas'])->name('notas.index');
+        Route::get('/turmas/{serie}/dados-boletim', [ProfessorController::class, 'buscarDadosBoletim'])->name('notas.dadosBoletim');
+        Route::post('/resultados/{resultado}/atualizar-nota', [ProfessorController::class, 'atualizarNota'])->name('notas.update');
+    });
 
     // Rotas do Aluno --
     Route::prefix('aluno')->name('aluno.')->group(function () {
